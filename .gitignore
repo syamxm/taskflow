@@ -1,0 +1,61 @@
+# ========================
+# Environment & Secrets
+# ========================
+.env
+.env.local
+.env.*.local
+.env.production
+
+# ========================
+# Node / NPM
+# ========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+package-lock.json
+
+# ========================
+# Build Outputs
+# ========================
+dist/
+build/
+.next/
+out/
+
+# ========================
+# Docker
+# ========================
+docker-compose.override.yml
+
+# ========================
+# Logs
+# ========================
+logs/
+*.log
+
+# ========================
+# OS & Editor
+# ========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ========================
+# MongoDB / DB dumps
+# ========================
+*.dump
+mongo-data/
+
+# ========================
+# Misc
+# ========================
+.cache/
+coverage/
+.nyc_output/
