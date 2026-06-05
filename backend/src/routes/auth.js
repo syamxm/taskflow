@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const { loginLimiter, registerLimiter } = require('../middleware/rateLimiters');
 
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -10,6 +11,7 @@ const signToken = (id) =>
 // POST /api/auth/register
 router.post(
   '/register',
+  registerLimiter,
   [
     body('name').notEmpty().withMessage('Name required'),
     body('email').isEmail().withMessage('Valid email required'),
@@ -36,6 +38,7 @@ router.post(
 // POST /api/auth/login
 router.post(
   '/login',
+  loginLimiter,
   [
     body('email').isEmail(),
     body('password').notEmpty(),
