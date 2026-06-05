@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
 
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
@@ -19,6 +20,7 @@ app.use(helmet());
 // Same-origin via nginx; allow cross-origin only if explicitly configured
 app.use(cors({ origin: process.env.CORS_ORIGIN || false }));
 app.use(express.json({ limit: '10kb' }));
+app.use(cookieParser());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);

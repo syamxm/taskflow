@@ -1,7 +1,28 @@
 const router = require('express').Router();
+const { body, validationResult } = require('express-validator');
 const auth = require('../middleware/auth');
 const Task = require('../models/Task');
 const Project = require('../models/Project');
+
+const STATUS = ['todo', 'in-progress', 'done'];
+const PRIORITY = ['low', 'medium', 'high'];
+
+const taskRules = (createMode) => [
+  createMode
+    ? body('title').trim().notEmpty().withMessage('Title required').isLength({ max: 200 })
+    : body('title').optional().trim().notEmpty().isLength({ max: 200 }),
+  body('description').optional().trim().isLength({ max: 2000 }),
+  body('status').optional({ values: 'falsy' }).isIn(STATUS).withMessage('Invalid status'),
+  body('priority').optional({ values: 'falsy' }).isIn(PRIORITY).withMessage('Invalid priority'),
+  body('dueDate').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid date').toDate(),
+  ...(createMode ? [body('project').notEmpty().withMessage('Project required').isMongoId()] : []),
+];
+
+const validate = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  next();
+};
 
 // GET /api/tasks?project=<id>
 router.get('/', auth, async (req, res) => {
@@ -16,10 +37,9 @@ router.get('/', auth, async (req, res) => {
 });
 
 // POST /api/tasks
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, taskRules(true), validate, async (req, res) => {
   try {
     const { title, description, status, priority, dueDate, project } = req.body;
-    if (!title || !project) return res.status(400).json({ message: 'Title and project required' });
 
     const proj = await Project.findOne({ _id: project, owner: req.user.id });
     if (!proj) return res.status(404).json({ message: 'Project not found' });
@@ -32,7 +52,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // PUT /api/tasks/:id
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, taskRules(false), validate, async (req, res) => {
   try {
     const { title, description, status, priority, dueDate } = req.body;
     const updates = { title, description, status, priority, dueDate };
