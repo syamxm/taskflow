@@ -10,6 +10,9 @@ export default function Navbar() {
       </Link>
       <div className="flex items-center gap-4">
         <span className="text-sm text-gray-400">{user?.name}</span>
+        <Link to="/settings" className="text-sm text-gray-400 hover:text-white transition-colors">
+          Settings
+        </Link>
         <button
           onClick={logout}
           className="text-sm text-gray-400 hover:text-white transition-colors"

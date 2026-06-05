@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import ProjectCard from '../components/ProjectCard';
@@ -11,6 +12,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', description: '', color: COLORS[0] });
+  const [showImport, setShowImport] = useState(false);
+  const [repos, setRepos] = useState([]);
+  const [reposLoading, setReposLoading] = useState(false);
 
   const fetchProjects = async () => {
     try {
@@ -35,6 +39,36 @@ export default function Dashboard() {
       toast.success('Project created');
     } catch {
       toast.error('Failed to create project');
+    }
+  };
+
+  const openImport = async () => {
+    if (showImport) { setShowImport(false); return; }
+    setShowImport(true);
+    setReposLoading(true);
+    try {
+      const { data } = await api.get('/github/repos');
+      setRepos(data);
+    } catch (err) {
+      if (err.response?.status === 400) {
+        toast.error('Connect GitHub in Settings first');
+        setShowImport(false);
+      } else {
+        toast.error('Failed to load repos');
+      }
+    } finally {
+      setReposLoading(false);
+    }
+  };
+
+  const trackRepo = async (repo) => {
+    try {
+      const { data } = await api.post('/github/track', repo);
+      setProjects([{ ...data, taskCount: 0, doneCount: 0 }, ...projects]);
+      setRepos(repos.map((r) => (r.repoId === repo.repoId ? { ...r, tracked: true } : r)));
+      toast.success('Repo tracked');
+    } catch {
+      toast.error('Failed to track repo');
     }
   };
 
@@ -73,13 +107,54 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white">Projects</h2>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="px-4 py-1.5 text-sm text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
-          >
-            + New Project
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={openImport}
+              className="px-4 py-1.5 text-sm text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              Import from GitHub
+            </button>
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="px-4 py-1.5 text-sm text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+            >
+              + New Project
+            </button>
+          </div>
         </div>
+
+        {/* Import from GitHub */}
+        {showImport && (
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-4">
+            {reposLoading ? (
+              <div className="flex justify-center py-6">
+                <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : repos.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-4">
+                No repos found. <Link to="/settings" className="text-primary-400 hover:text-primary-300">Check your GitHub connection</Link>.
+              </p>
+            ) : (
+              <div className="max-h-72 overflow-y-auto divide-y divide-gray-800">
+                {repos.map((r) => (
+                  <div key={r.repoId} className="flex items-center justify-between py-2.5">
+                    <div className="min-w-0">
+                      <div className="text-sm text-white truncate">{r.fullName}</div>
+                      <div className="text-xs text-gray-500">★ {r.stars} · {r.language || 'n/a'}</div>
+                    </div>
+                    <button
+                      onClick={() => trackRepo(r)}
+                      disabled={r.tracked}
+                      className="ml-3 px-3 py-1 text-xs rounded-lg transition-colors disabled:opacity-50 disabled:cursor-default text-white bg-primary-600 hover:bg-primary-700"
+                    >
+                      {r.tracked ? 'Tracked' : 'Track'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* New project form */}
         {showForm && (
