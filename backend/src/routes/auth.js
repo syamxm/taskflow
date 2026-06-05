@@ -8,6 +8,20 @@ const { loginLimiter, registerLimiter } = require('../middleware/rateLimiters');
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
+const COOKIE_NAME = 'token';
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.COOKIE_SECURE === 'true',
+  sameSite: 'strict',
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
+const sendAuth = (res, user, status = 200) =>
+  res
+    .cookie(COOKIE_NAME, signToken(user._id), cookieOptions)
+    .status(status)
+    .json({ user: { id: user._id, name: user.name, email: user.email } });
+
 // POST /api/auth/register
 router.post(
   '/register',
@@ -24,11 +38,11 @@ router.post(
     const { name, email, password } = req.body;
     try {
       if (await User.findOne({ email }))
-        return res.status(400).json({ message: 'Email already in use' });
+        return res.status(400).json({ message: 'Unable to register with those details' });
 
       const hash = await bcrypt.hash(password, 12);
       const user = await User.create({ name, email, password: hash });
-      res.status(201).json({ token: signToken(user._id), user: { id: user._id, name: user.name, email: user.email } });
+      sendAuth(res, user, 201);
     } catch (err) {
       res.status(500).json({ message: 'Server error' });
     }
@@ -55,12 +69,18 @@ router.post(
       const match = await bcrypt.compare(password, user.password);
       if (!match) return res.status(400).json({ message: 'Invalid credentials' });
 
-      res.json({ token: signToken(user._id), user: { id: user._id, name: user.name, email: user.email } });
+      sendAuth(res, user);
     } catch {
       res.status(500).json({ message: 'Server error' });
     }
   }
 );
+
+// POST /api/auth/logout
+router.post('/logout', (req, res) => {
+  res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: undefined });
+  res.json({ message: 'Logged out' });
+});
 
 // GET /api/auth/me
 const authMiddleware = require('../middleware/auth');
