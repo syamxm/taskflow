@@ -46,10 +46,13 @@ router.get('/:id', auth, async (req, res) => {
 // PUT /api/projects/:id
 router.put('/:id', auth, async (req, res) => {
   try {
+    const { name, description, color } = req.body;
+    const updates = { name, description, color };
+    Object.keys(updates).forEach((k) => updates[k] === undefined && delete updates[k]);
     const project = await Project.findOneAndUpdate(
       { _id: req.params.id, owner: req.user.id },
-      req.body,
-      { new: true }
+      updates,
+      { new: true, runValidators: true }
     );
     if (!project) return res.status(404).json({ message: 'Project not found' });
     res.json(project);
