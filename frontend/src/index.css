@@ -5,5 +5,11 @@
 @layer base {
   body {
     @apply bg-gray-950 text-gray-100 antialiased;
+    caret-color: #d6b3ff;
+  }
+
+  ::selection {
+    background-color: #2a1f3d;
+    color: #ffffff;
   }
 }
