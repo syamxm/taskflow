@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const auth = require('../middleware/auth');
 const { loginLimiter, registerLimiter } = require('../middleware/rateLimiters');
 
 const signToken = (id) =>
@@ -83,8 +84,7 @@ router.post('/logout', (req, res) => {
 });
 
 // GET /api/auth/me
-const authMiddleware = require('../middleware/auth');
-router.get('/me', authMiddleware, async (req, res) => {
+router.get('/me', auth, async (req, res) => {
   const user = await User.findById(req.user.id).select('-password');
   res.json(user);
 });

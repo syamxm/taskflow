@@ -1,6 +1,8 @@
 const router = require('express').Router();
-const { body, validationResult } = require('express-validator');
+const { body } = require('express-validator');
 const auth = require('../middleware/auth');
+const validate = require('../middleware/validate');
+const pickDefined = require('../utils/pickDefined');
 const Task = require('../models/Task');
 const Project = require('../models/Project');
 
@@ -17,12 +19,6 @@ const taskRules = (createMode) => [
   body('dueDate').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid date').toDate(),
   ...(createMode ? [body('project').notEmpty().withMessage('Project required').isMongoId()] : []),
 ];
-
-const validate = (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  next();
-};
 
 // GET /api/tasks?project=<id>
 router.get('/', auth, async (req, res) => {
@@ -55,8 +51,7 @@ router.post('/', auth, taskRules(true), validate, async (req, res) => {
 router.put('/:id', auth, taskRules(false), validate, async (req, res) => {
   try {
     const { title, description, status, priority, dueDate } = req.body;
-    const updates = { title, description, status, priority, dueDate };
-    Object.keys(updates).forEach((k) => updates[k] === undefined && delete updates[k]);
+    const updates = pickDefined({ title, description, status, priority, dueDate });
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, owner: req.user.id },
       updates,
