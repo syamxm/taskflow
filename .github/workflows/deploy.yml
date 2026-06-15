@@ -33,7 +33,7 @@ jobs:
             --config p/default --config p/javascript --config p/nodejs \
             --config p/owasp-top-ten --config p/secrets
       - name: Trivy filesystem scan (${{ matrix.dir }})
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: ${{ matrix.dir }}
@@ -52,7 +52,7 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.dir }}
           cache-to: type=gha,mode=max,scope=${{ matrix.dir }}
       - name: Trivy image scan (${{ matrix.dir }})
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: image
           image-ref: taskflow-${{ matrix.dir }}:gate
