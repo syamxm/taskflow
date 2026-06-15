@@ -34,7 +34,7 @@ jobs:
             p/default p/javascript p/nodejs p/express p/owasp-top-ten p/secrets
       - name: Upload SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: semgrep.sarif
 
@@ -115,7 +115,7 @@ jobs:
           output: trivy-${{ matrix.image }}.sarif
       - name: Upload SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-${{ matrix.image }}.sarif
           category: image-${{ matrix.image }}
