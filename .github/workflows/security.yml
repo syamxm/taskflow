@@ -41,6 +41,7 @@ jobs:
   deps:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         dir: [backend, frontend]
     steps:
@@ -85,6 +86,7 @@ jobs:
   image-scan:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         image: [backend, frontend]
     steps:
