@@ -29,9 +29,9 @@ jobs:
       - name: Semgrep (errors only)
         run: |
           docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep \
-            semgrep ci --severity ERROR
-        env:
-          SEMGREP_RULES: p/default p/javascript p/nodejs p/owasp-top-ten p/secrets
+            semgrep scan --error --severity ERROR --quiet \
+            --config p/default --config p/javascript --config p/nodejs \
+            --config p/owasp-top-ten --config p/secrets
       - name: Trivy filesystem scan (${{ matrix.dir }})
         uses: aquasecurity/trivy-action@0.35.0
         with:
