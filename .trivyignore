@@ -1,0 +1,2 @@
+# Accepted-risk CVEs (unfixable transitive issues). Format: one CVE id per line
+# with a justification comment. Start empty — add entries only after triage.

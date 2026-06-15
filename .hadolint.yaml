@@ -1,0 +1,6 @@
+# DL3018: pin apk versions — not used (no apk installs).
+# DL3008: pin apt versions — not used.
+# Base images are tag-pinned; digest pinning is handled by Dependabot.
+ignored:
+  - DL3007  # allow 'alpine' latest-style tag on nginx stage (Dependabot tracks it)
+failure-threshold: warning

@@ -1,0 +1,13 @@
+# Extends the bundled gitleaks ruleset; allowlists placeholder values that
+# legitimately live in committed example/config files.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documented placeholders, not real secrets"
+paths = [
+  '''backend/\.env\.example''',
+]
+regexes = [
+  '''change_this_to_.*''',
+]
