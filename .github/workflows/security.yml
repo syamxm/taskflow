@@ -126,7 +126,7 @@ jobs:
             --output /dev/stdout taskflow-${{ matrix.image }}:ci > sbom-${{ matrix.image }}.json || true
       - name: Upload SBOM
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom-${{ matrix.image }}
           path: sbom-${{ matrix.image }}.json
