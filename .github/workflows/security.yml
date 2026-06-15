@@ -49,6 +49,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
       - name: npm audit (${{ matrix.dir }})
         working-directory: ${{ matrix.dir }}
         run: npm audit --omit=dev --audit-level=high
@@ -91,8 +93,15 @@ jobs:
         image: [backend, frontend]
     steps:
       - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
       - name: Build ${{ matrix.image }} image
-        run: docker build -t taskflow-${{ matrix.image }}:ci ./${{ matrix.image }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.image }}
+          load: true
+          tags: taskflow-${{ matrix.image }}:ci
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
       - name: Trivy image scan
         uses: aquasecurity/trivy-action@0.35.0
         with:
