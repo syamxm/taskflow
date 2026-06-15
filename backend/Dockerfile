@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:26-alpine
 RUN apk upgrade --no-cache && npm install -g npm@latest
 WORKDIR /app
 COPY package*.json ./
