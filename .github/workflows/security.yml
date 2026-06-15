@@ -28,10 +28,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Semgrep scan
-        run: semgrep ci --sarif --output semgrep.sarif
-        env:
-          SEMGREP_RULES: >-
-            p/default p/javascript p/nodejs p/express p/owasp-top-ten p/secrets
+        run: |
+          semgrep scan --error --severity ERROR --sarif --output semgrep.sarif \
+            --config p/default --config p/javascript --config p/nodejs \
+            --config p/express --config p/owasp-top-ten --config p/secrets
       - name: Upload SARIF
         if: always()
         uses: github/codeql-action/upload-sarif@v3
