@@ -55,7 +55,7 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: npm audit --omit=dev --audit-level=high
       - name: Trivy dependency scan (${{ matrix.dir }})
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: ${{ matrix.dir }}
@@ -70,15 +70,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Hadolint backend
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: backend/Dockerfile
       - name: Hadolint frontend
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: frontend/Dockerfile
       - name: Trivy misconfig scan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: .
@@ -103,7 +103,7 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
       - name: Trivy image scan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: image
           image-ref: taskflow-${{ matrix.image }}:ci
@@ -159,7 +159,7 @@ jobs:
           done
           echo "app did not become healthy"; docker compose logs; exit 1
       - name: ZAP baseline scan
-        uses: zaproxy/action-baseline@v0.14.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: http://localhost:8080
           rules_file_name: .zap/rules.tsv
