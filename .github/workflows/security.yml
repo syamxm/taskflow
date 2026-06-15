@@ -53,7 +53,7 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: npm audit --omit=dev --audit-level=high
       - name: Trivy dependency scan (${{ matrix.dir }})
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: ${{ matrix.dir }}
@@ -76,7 +76,7 @@ jobs:
         with:
           dockerfile: frontend/Dockerfile
       - name: Trivy misconfig scan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: .
@@ -94,7 +94,7 @@ jobs:
       - name: Build ${{ matrix.image }} image
         run: docker build -t taskflow-${{ matrix.image }}:ci ./${{ matrix.image }}
       - name: Trivy image scan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: image
           image-ref: taskflow-${{ matrix.image }}:ci
