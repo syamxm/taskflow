@@ -1,5 +1,7 @@
 version: 2
 updates:
+  # npm: group only safe minor+patch (auto-merged). Majors arrive as their own
+  # PRs so one breaking bump can't block the rest — you review/migrate each.
   - package-ecosystem: npm
     directory: /backend
     schedule:
@@ -8,6 +10,7 @@ updates:
     groups:
       backend-deps:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: npm
     directory: /frontend
@@ -17,6 +20,7 @@ updates:
     groups:
       frontend-deps:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: github-actions
     directory: /
@@ -25,6 +29,7 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: docker
     directory: /backend
