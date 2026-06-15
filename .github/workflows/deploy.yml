@@ -32,7 +32,7 @@ jobs:
         env:
           SEMGREP_RULES: p/default p/javascript p/nodejs p/owasp-top-ten p/secrets
       - name: Trivy filesystem scan (${{ matrix.dir }})
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: fs
           scan-ref: ${{ matrix.dir }}
@@ -42,7 +42,7 @@ jobs:
       - name: Build ${{ matrix.dir }} image
         run: docker build -t taskflow-${{ matrix.dir }}:gate ./${{ matrix.dir }}
       - name: Trivy image scan (${{ matrix.dir }})
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: image
           image-ref: taskflow-${{ matrix.dir }}:gate
