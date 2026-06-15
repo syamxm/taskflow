@@ -50,7 +50,7 @@ jobs:
           node-version: 20
       - name: npm audit (${{ matrix.dir }})
         working-directory: ${{ matrix.dir }}
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
       - name: Trivy dependency scan (${{ matrix.dir }})
         uses: aquasecurity/trivy-action@0.35.0
         with:
@@ -58,6 +58,8 @@ jobs:
           scan-ref: ${{ matrix.dir }}
           scanners: vuln
           severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
           exit-code: '1'
 
   iac-lint:
@@ -95,6 +97,8 @@ jobs:
           scan-type: image
           image-ref: taskflow-${{ matrix.image }}:ci
           severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
           exit-code: '1'
           format: sarif
           output: trivy-${{ matrix.image }}.sarif

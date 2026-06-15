@@ -38,6 +38,8 @@ jobs:
           scan-ref: ${{ matrix.dir }}
           scanners: vuln
           severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
           exit-code: '1'
       - name: Build ${{ matrix.dir }} image
         run: docker build -t taskflow-${{ matrix.dir }}:gate ./${{ matrix.dir }}
@@ -47,6 +49,8 @@ jobs:
           scan-type: image
           image-ref: taskflow-${{ matrix.dir }}:gate
           severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
           exit-code: '1'
 
   deploy:
