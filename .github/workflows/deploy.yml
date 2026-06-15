@@ -10,7 +10,52 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  security-gate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Semgrep (errors only)
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep \
+            semgrep ci --severity ERROR
+        env:
+          SEMGREP_RULES: p/default p/javascript p/nodejs p/owasp-top-ten p/secrets
+      - name: Trivy filesystem scan (${{ matrix.dir }})
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: fs
+          scan-ref: ${{ matrix.dir }}
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          exit-code: '1'
+      - name: Build ${{ matrix.dir }} image
+        run: docker build -t taskflow-${{ matrix.dir }}:gate ./${{ matrix.dir }}
+      - name: Trivy image scan (${{ matrix.dir }})
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: image
+          image-ref: taskflow-${{ matrix.dir }}:gate
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          exit-code: '1'
+
   deploy:
+    needs: security-gate
     runs-on: ubuntu-latest
     steps:
       - name: Connect to Tailscale

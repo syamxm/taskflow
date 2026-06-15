@@ -1,0 +1,3 @@
+# ZAP baseline rule tuning. Tab-separated: <ruleId>\t<action>\t<comment>
+# action: IGNORE | WARN | FAIL. Default keeps everything as configured by the scan.
+# Add IGNORE lines here for confirmed false positives after the first run.

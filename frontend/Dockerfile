@@ -5,7 +5,8 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM nginx:alpine
+FROM nginxinc/nginx-unprivileged:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx-spa.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+USER nginx
+EXPOSE 8081

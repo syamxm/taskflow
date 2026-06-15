@@ -1,0 +1,7 @@
+# Accepted-risk findings. Each entry needs a justification and a recheck trigger.
+
+# esbuild dev-server SSRF + install-time integrity issues. esbuild ships only as
+# a frontend devDependency (via vite); it never runs in production — the frontend
+# is served as a static build behind nginx. Revisit when bumping vite past v5.
+GHSA-67mh-4wv8-2f99
+GHSA-gv7w-rqvm-qjhr
