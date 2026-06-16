@@ -10,126 +10,57 @@ permissions:
   security-events: write
 
 jobs:
-  secret-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  security:
+    uses: ./.github/workflows/security-scan.yml
+    secrets: inherit
 
-  sast:
+  frontend-build:
     runs-on: ubuntu-latest
-    container:
-      image: semgrep/semgrep
-    steps:
-      - uses: actions/checkout@v4
-      - name: Semgrep scan
-        run: |
-          semgrep scan --error --severity ERROR --sarif --output semgrep.sarif \
-            --config p/default --config p/javascript --config p/nodejs \
-            --config p/owasp-top-ten --config p/secrets
-      - name: Upload SARIF
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: semgrep.sarif
-
-  deps:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        dir: [backend, frontend]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
-      - name: npm audit (${{ matrix.dir }})
-        working-directory: ${{ matrix.dir }}
-        run: npm audit --omit=dev --audit-level=high
-      - name: Trivy dependency scan (${{ matrix.dir }})
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          scan-type: fs
-          scan-ref: ${{ matrix.dir }}
-          scanners: vuln
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          trivyignores: .trivyignore
-          exit-code: '1'
-
-  iac-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Hadolint backend
-        uses: hadolint/hadolint-action@v3.3.0
-        with:
-          dockerfile: backend/Dockerfile
-      - name: Hadolint frontend
-        uses: hadolint/hadolint-action@v3.3.0
-        with:
-          dockerfile: frontend/Dockerfile
-      - name: Trivy misconfig scan
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          scan-type: config
-          scan-ref: .
-          severity: HIGH,CRITICAL
-          exit-code: '1'
-
-  image-scan:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        image: [backend, frontend]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - name: Build ${{ matrix.image }} image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./${{ matrix.image }}
-          load: true
-          tags: taskflow-${{ matrix.image }}:ci
-          cache-from: type=gha,scope=${{ matrix.image }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
-      - name: Trivy image scan
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          scan-type: image
-          image-ref: taskflow-${{ matrix.image }}:ci
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          trivyignores: .trivyignore
-          exit-code: '1'
-          format: sarif
-          output: trivy-${{ matrix.image }}.sarif
-      - name: Upload SARIF
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: trivy-${{ matrix.image }}.sarif
-          category: image-${{ matrix.image }}
-      - name: Generate SBOM
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install and build
+        working-directory: frontend
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy image --format cyclonedx \
-            --output /dev/stdout taskflow-${{ matrix.image }}:ci > sbom-${{ matrix.image }}.json || true
-      - name: Upload SBOM
-        if: always()
-        uses: actions/upload-artifact@v4
+          npm ci
+          npm run build
+
+  backend-smoke:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          name: sbom-${{ matrix.image }}
-          path: sbom-${{ matrix.image }}.json
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Install
+        working-directory: backend
+        run: npm ci
+      - name: Boot and health check
+        working-directory: backend
+        run: |
+          export MONGO_URI=mongodb://localhost:27017/taskflow
+          export JWT_SECRET=$(openssl rand -hex 32)
+          export ENCRYPTION_KEY=$(openssl rand -hex 32)
+          export PORT=5000
+          export NODE_ENV=production
+          export COOKIE_SECURE=false
+          node src/index.js &
+          for i in $(seq 1 30); do
+            if curl -fs http://localhost:5000/api/health; then echo "backend healthy"; exit 0; fi
+            sleep 2
+          done
+          echo "backend did not become healthy"; exit 1
 
   dast:
     runs-on: ubuntu-latest
