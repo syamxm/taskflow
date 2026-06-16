@@ -1,3 +1,4 @@
+import './__gate_test_missing_module__'; // TEST: deliberately breaks the build to prove the gate blocks merges
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
