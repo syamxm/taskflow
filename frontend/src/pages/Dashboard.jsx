@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [showImport, setShowImport] = useState(false);
   const [repos, setRepos] = useState([]);
   const [reposLoading, setReposLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const fetchProjects = async () => {
     try {
@@ -72,6 +73,32 @@ export default function Dashboard() {
     }
   };
 
+  const refreshProject = async (id) => {
+    try {
+      const { data } = await api.post(`/github/sync/${id}`);
+      setProjects(projects.map((p) =>
+        p._id === id ? { ...data, taskCount: p.taskCount, doneCount: p.doneCount } : p
+      ));
+      toast.success('Refreshed from GitHub');
+    } catch {
+      toast.error('Failed to refresh');
+    }
+  };
+
+  const refreshAll = async () => {
+    setSyncing(true);
+    try {
+      const { data } = await api.post('/github/sync-all');
+      await fetchProjects();
+      toast.success(`Synced ${data.synced} project${data.synced === 1 ? '' : 's'}`);
+    } catch (err) {
+      if (err.response?.status === 400) toast.error('Connect GitHub in Settings first');
+      else toast.error('Failed to sync');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const deleteProject = async (id) => {
     if (!confirm('Delete this project and all its tasks?')) return;
     try {
@@ -108,6 +135,13 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white">Projects</h2>
           <div className="flex items-center gap-2">
+            <button
+              onClick={refreshAll}
+              disabled={syncing}
+              className="px-4 py-1.5 text-sm text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {syncing ? 'Refreshing…' : 'Refresh GitHub'}
+            </button>
             <button
               onClick={openImport}
               className="px-4 py-1.5 text-sm text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
@@ -197,7 +231,7 @@ export default function Dashboard() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.map((p) => (
-              <ProjectCard key={p._id} project={p} onDelete={deleteProject} />
+              <ProjectCard key={p._id} project={p} onDelete={deleteProject} onRefresh={refreshProject} />
             ))}
           </div>
         )}

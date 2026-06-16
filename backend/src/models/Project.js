@@ -15,6 +15,23 @@ const projectSchema = new mongoose.Schema(
       openIssues: Number,
       language: String,
       lastPush: Date,
+      defaultBranch: String,
+      branches: [
+        new mongoose.Schema(
+          { name: String, protected: Boolean, sha: String },
+          { _id: false }
+        ),
+      ],
+      loc: {
+        total: Number,
+        byLanguage: [
+          new mongoose.Schema(
+            { language: String, lines: Number, files: Number },
+            { _id: false }
+          ),
+        ],
+      },
+      syncedAt: Date,
     },
   },
   { timestamps: true }

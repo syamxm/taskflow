@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function timeAgo(date) {
@@ -10,9 +11,21 @@ function timeAgo(date) {
   return `${Math.floor(days / 365)}y ago`;
 }
 
-export default function ProjectCard({ project, onDelete }) {
+export default function ProjectCard({ project, onDelete, onRefresh }) {
   const navigate = useNavigate();
+  const [refreshing, setRefreshing] = useState(false);
   const isGithub = project.source === 'github';
+  const loc = project.github?.loc?.total;
+
+  const handleRefresh = async (e) => {
+    e.stopPropagation();
+    setRefreshing(true);
+    try {
+      await onRefresh(project._id);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const progress = project.taskCount > 0
     ? Math.round((project.doneCount / project.taskCount) * 100)
@@ -34,12 +47,24 @@ export default function ProjectCard({ project, onDelete }) {
           )}
           <h3 className="font-semibold text-white truncate">{project.name}</h3>
         </div>
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(project._id); }}
-          className="text-gray-600 hover:text-red-400 transition-colors text-lg leading-none flex-shrink-0"
-        >
-          ×
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {isGithub && onRefresh && (
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              title="Refresh from GitHub"
+              className="text-gray-600 hover:text-primary-400 transition-colors text-sm leading-none disabled:opacity-50"
+            >
+              <span className={`inline-block ${refreshing ? 'animate-spin' : ''}`}>↻</span>
+            </button>
+          )}
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(project._id); }}
+            className="text-gray-600 hover:text-red-400 transition-colors text-lg leading-none"
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       {project.description && (
@@ -51,6 +76,7 @@ export default function ProjectCard({ project, onDelete }) {
           {project.github?.language && <span>{project.github.language}</span>}
           <span>★ {project.github?.stars ?? 0}</span>
           <span>{project.github?.openIssues ?? 0} issues</span>
+          {loc != null && <span>{loc.toLocaleString()} LOC</span>}
           <span className="ml-auto">updated {timeAgo(project.github?.lastPush)}</span>
           <a
             href={project.github?.htmlUrl}

@@ -4,7 +4,27 @@ const auth = require('../middleware/auth');
 const User = require('../models/User');
 const Project = require('../models/Project');
 const { encrypt } = require('../utils/crypto');
-const { getOctokit } = require('../utils/github');
+const { getOctokit, fetchBranches, fetchLoc } = require('../utils/github');
+
+async function syncProject(project, octokit) {
+  const [owner, repo] = project.github.fullName.split('/');
+  const { data } = await octokit.rest.repos.get({ owner, repo });
+
+  project.github.stars = data.stargazers_count;
+  project.github.openIssues = data.open_issues_count;
+  project.github.language = data.language;
+  project.github.lastPush = data.pushed_at;
+  project.github.defaultBranch = data.default_branch;
+  project.description = data.description || project.description;
+  project.github.branches = await fetchBranches(octokit, owner, repo);
+
+  const loc = await fetchLoc(project.github.fullName);
+  if (loc) project.github.loc = loc;
+
+  project.github.syncedAt = new Date();
+  await project.save();
+  return project;
+}
 
 // GET /api/github/status
 router.get('/status', auth, async (req, res) => {
@@ -98,16 +118,32 @@ router.post('/sync/:id', auth, async (req, res) => {
 
     const user = await User.findById(req.user.id).select('+githubToken');
     const octokit = getOctokit(user);
-    const [owner, repo] = project.github.fullName.split('/');
-    const { data } = await octokit.rest.repos.get({ owner, repo });
-
-    project.github.stars = data.stargazers_count;
-    project.github.openIssues = data.open_issues_count;
-    project.github.language = data.language;
-    project.github.lastPush = data.pushed_at;
-    project.description = data.description || project.description;
-    await project.save();
+    await syncProject(project, octokit);
     res.json(project);
+  } catch (err) {
+    if (err.status === 400) return res.status(400).json({ message: err.message });
+    res.status(500).json({ message: 'Sync failed' });
+  }
+});
+
+// POST /api/github/sync-all
+router.post('/sync-all', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('+githubToken');
+    const octokit = getOctokit(user);
+    const projects = await Project.find({ owner: req.user.id, source: 'github' });
+
+    let synced = 0;
+    let failed = 0;
+    for (const project of projects) {
+      try {
+        await syncProject(project, octokit);
+        synced += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+    res.json({ synced, failed });
   } catch (err) {
     if (err.status === 400) return res.status(400).json({ message: err.message });
     res.status(500).json({ message: 'Sync failed' });
