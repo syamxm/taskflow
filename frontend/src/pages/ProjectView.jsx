@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import TaskCard from '../components/TaskCard';
 import TaskModal from '../components/TaskModal';
+import RepoInsight from '../components/RepoInsight';
 import api from '../api/axios';
 
 const COLUMNS = ['todo', 'in-progress', 'done'];
@@ -18,6 +19,7 @@ export default function ProjectView() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editTask, setEditTask] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -80,6 +82,19 @@ export default function ProjectView() {
     }
   };
 
+  const refreshRepo = async () => {
+    setRefreshing(true);
+    try {
+      const { data } = await api.post(`/github/sync/${id}`);
+      setProject(data);
+      toast.success('Refreshed from GitHub');
+    } catch {
+      toast.error('Failed to refresh');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const openEdit = (task) => { setEditTask(task); setModalOpen(true); };
   const openNew = () => { setEditTask(null); setModalOpen(true); };
 
@@ -104,6 +119,11 @@ export default function ProjectView() {
           <h1 className="text-xl font-bold text-white">{project?.name}</h1>
           {project?.description && <span className="text-sm text-gray-500">{project.description}</span>}
         </div>
+
+        {/* Repo insight */}
+        {project?.source === 'github' && (
+          <RepoInsight project={project} onRefresh={refreshRepo} refreshing={refreshing} />
+        )}
 
         {/* Toolbar */}
         <div className="flex items-center justify-between mb-6">
