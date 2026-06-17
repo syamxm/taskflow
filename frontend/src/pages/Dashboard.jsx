@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import ProjectCard from '../components/ProjectCard';
 import api from '../api/axios';
 import { undoableDelete } from '../lib/undoToast';
+import { SkeletonGrid } from '../components/Skeleton';
 
 const COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
@@ -158,9 +159,9 @@ export default function Dashboard() {
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h2 className="text-lg font-semibold text-white">Projects</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={refreshAll}
               disabled={syncing}
@@ -285,13 +286,26 @@ export default function Dashboard() {
 
         {/* Projects grid */}
         {loading ? (
-          <div className="flex justify-center py-16">
-            <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-          </div>
+          <SkeletonGrid />
         ) : projects.length === 0 ? (
-          <div className="text-center py-16 text-gray-500">
+          <div className="text-center py-16">
             <p className="text-4xl mb-3">📋</p>
-            <p>No projects yet. Create one to get started.</p>
+            <p className="text-gray-400 mb-1">No projects yet</p>
+            <p className="text-sm text-gray-500 mb-5">Create one or import a repo from GitHub to get started.</p>
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={() => setShowForm(true)}
+                className="px-4 py-1.5 text-sm text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+              >
+                + New Project
+              </button>
+              <button
+                onClick={openImport}
+                className="px-4 py-1.5 text-sm text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                Import from GitHub
+              </button>
+            </div>
           </div>
         ) : visibleProjects.length === 0 ? (
           <div className="text-center py-16 text-gray-500">
