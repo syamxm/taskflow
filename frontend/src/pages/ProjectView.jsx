@@ -6,6 +6,7 @@ import TaskCard from '../components/TaskCard';
 import TaskModal from '../components/TaskModal';
 import RepoInsight from '../components/RepoInsight';
 import api from '../api/axios';
+import { undoableDelete } from '../lib/undoToast';
 
 const COLUMNS = ['todo', 'in-progress', 'done'];
 const COL_LABELS = { todo: 'Todo', 'in-progress': 'In Progress', done: 'Done' };
@@ -62,15 +63,21 @@ export default function ProjectView() {
     }
   };
 
-  const deleteTask = async (taskId) => {
-    if (!confirm('Delete this task?')) return;
-    try {
-      await api.delete(`/tasks/${taskId}`);
-      setTasks(tasks.filter((t) => t._id !== taskId));
-      toast.success('Task deleted');
-    } catch {
-      toast.error('Failed to delete task');
-    }
+  const deleteTask = (taskId) => {
+    const idx = tasks.findIndex((t) => t._id === taskId);
+    if (idx === -1) return;
+    const target = tasks[idx];
+    undoableDelete({
+      label: 'Task',
+      onRemove: () => setTasks((cur) => cur.filter((t) => t._id !== taskId)),
+      onRestore: () => setTasks((cur) => {
+        if (cur.some((t) => t._id === taskId)) return cur;
+        const next = [...cur];
+        next.splice(idx, 0, target);
+        return next;
+      }),
+      commit: () => api.delete(`/tasks/${taskId}`),
+    });
   };
 
   const changeStatus = async (taskId, status) => {
