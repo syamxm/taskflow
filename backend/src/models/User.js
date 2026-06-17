@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true, minlength: 6 },
     githubUsername: { type: String, default: null },
     githubToken: { type: githubTokenSchema, select: false, default: null },
+    failedLoginAttempts: { type: Number, default: 0 },
+    lockUntil: { type: Date, default: null },
   },
   { timestamps: true }
 );

@@ -1,10 +1,13 @@
 const router = require('express').Router();
 const { Octokit } = require('@octokit/rest');
 const auth = require('../middleware/auth');
+const { githubLimiter } = require('../middleware/rateLimiters');
 const User = require('../models/User');
 const Project = require('../models/Project');
 const { encrypt } = require('../utils/crypto');
 const { getOctokit, fetchBranches, fetchLoc } = require('../utils/github');
+
+router.use(githubLimiter);
 
 async function syncProject(project, octokit) {
   const [owner, repo] = project.github.fullName.split('/');
