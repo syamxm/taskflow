@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
@@ -17,6 +17,9 @@ export default function Dashboard() {
   const [repos, setRepos] = useState([]);
   const [reposLoading, setReposLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [query, setQuery] = useState('');
+  const [sortBy, setSortBy] = useState('updated');
+  const [filter, setFilter] = useState('all');
 
   const fetchProjects = async () => {
     try {
@@ -120,6 +123,22 @@ export default function Dashboard() {
   const totalTasks = projects.reduce((a, p) => a + p.taskCount, 0);
   const doneTasks = projects.reduce((a, p) => a + p.doneCount, 0);
 
+  const visibleProjects = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const updatedAt = (p) => new Date(p.github?.lastPush || p.updatedAt || 0).getTime();
+    return projects
+      .filter((p) => filter === 'all' || p.source === filter)
+      .filter((p) => !q || p.name.toLowerCase().includes(q))
+      .sort((a, b) => {
+        switch (sortBy) {
+          case 'name': return a.name.localeCompare(b.name);
+          case 'stars': return (b.github?.stars ?? 0) - (a.github?.stars ?? 0);
+          case 'tasks': return b.taskCount - a.taskCount;
+          default: return updatedAt(b) - updatedAt(a);
+        }
+      });
+  }, [projects, query, sortBy, filter]);
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -163,6 +182,45 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
+
+        {/* Search / sort / filter */}
+        {!loading && projects.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search projects…"
+              className="flex-1 min-w-[12rem] bg-gray-900 border border-gray-800 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500"
+            />
+            <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg p-0.5">
+              {[
+                { value: 'all', label: 'All' },
+                { value: 'github', label: 'GitHub' },
+                { value: 'manual', label: 'Custom' },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setFilter(opt.value)}
+                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    filter === opt.value ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-gray-900 border border-gray-800 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-none focus:border-primary-500"
+            >
+              <option value="updated">Recently updated</option>
+              <option value="name">Name</option>
+              <option value="stars">Stars</option>
+              <option value="tasks">Task count</option>
+            </select>
+          </div>
+        )}
 
         {/* Import from GitHub */}
         {showImport && (
@@ -235,9 +293,13 @@ export default function Dashboard() {
             <p className="text-4xl mb-3">📋</p>
             <p>No projects yet. Create one to get started.</p>
           </div>
+        ) : visibleProjects.length === 0 ? (
+          <div className="text-center py-16 text-gray-500">
+            <p>No projects match your search.</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects.map((p) => (
+            {visibleProjects.map((p) => (
               <ProjectCard key={p._id} project={p} onDelete={deleteProject} onRefresh={refreshProject} />
             ))}
           </div>
