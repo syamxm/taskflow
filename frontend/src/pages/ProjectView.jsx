@@ -108,8 +108,20 @@ export default function ProjectView() {
   const filtered = filter === 'all' ? tasks : tasks.filter((t) => t.priority === filter);
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+    <div className="min-h-screen">
+      <Navbar />
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="h-6 w-48 rounded bg-gray-800 animate-pulse mb-6" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[0, 1, 2].map((c) => (
+            <div key={c} className="bg-gray-900/50 rounded-xl p-4 space-y-3">
+              <div className="h-4 w-24 rounded bg-gray-800 animate-pulse" />
+              <div className="h-20 rounded-lg bg-gray-800 animate-pulse" />
+              <div className="h-20 rounded-lg bg-gray-800 animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </main>
     </div>
   );
 
@@ -118,7 +130,7 @@ export default function ProjectView() {
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex flex-wrap items-center gap-3 mb-6">
           <button onClick={() => navigate('/')} className="text-gray-500 hover:text-white text-sm transition-colors">
             ← Back
           </button>
