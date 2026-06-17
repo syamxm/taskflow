@@ -21,6 +21,8 @@ export default function ProjectView() {
   const [editTask, setEditTask] = useState(null);
   const [filter, setFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [draggedId, setDraggedId] = useState(null);
+  const [dragOverCol, setDragOverCol] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -81,12 +83,21 @@ export default function ProjectView() {
   };
 
   const changeStatus = async (taskId, status) => {
+    const prev = tasks;
+    setTasks((cur) => cur.map((t) => (t._id === taskId ? { ...t, status } : t)));
     try {
-      const { data } = await api.put(`/tasks/${taskId}`, { status });
-      setTasks(tasks.map((t) => (t._id === data._id ? data : t)));
+      await api.put(`/tasks/${taskId}`, { status });
     } catch {
+      setTasks(prev);
       toast.error('Failed to update status');
     }
+  };
+
+  const handleDrop = (col) => {
+    setDragOverCol(null);
+    const task = tasks.find((t) => t._id === draggedId);
+    setDraggedId(null);
+    if (task && task.status !== col) changeStatus(task._id, col);
   };
 
   const refreshRepo = async () => {
@@ -165,17 +176,31 @@ export default function ProjectView() {
           {COLUMNS.map((col) => {
             const colTasks = filtered.filter((t) => t.status === col);
             return (
-              <div key={col} className="bg-gray-900/50 rounded-xl p-4">
+              <div
+                key={col}
+                onDragOver={(e) => { e.preventDefault(); setDragOverCol(col); }}
+                onDragLeave={() => setDragOverCol((c) => (c === col ? null : c))}
+                onDrop={() => handleDrop(col)}
+                className={`rounded-xl p-4 transition-colors ${dragOverCol === col ? 'bg-gray-800/60 ring-1 ring-primary-500' : 'bg-gray-900/50'}`}
+              >
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-medium text-gray-300">{COL_LABELS[col]}</h3>
                   <span className="text-xs text-gray-500 bg-gray-800 rounded-full px-2 py-0.5">{colTasks.length}</span>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-3 min-h-[3rem]">
                   {colTasks.length === 0 ? (
-                    <p className="text-xs text-gray-600 text-center py-4">No tasks</p>
+                    <p className="text-xs text-gray-600 text-center py-4">{draggedId ? 'Drop here' : 'No tasks'}</p>
                   ) : (
                     colTasks.map((t) => (
-                      <TaskCard key={t._id} task={t} onEdit={openEdit} onDelete={deleteTask} onStatusChange={changeStatus} />
+                      <div
+                        key={t._id}
+                        draggable
+                        onDragStart={() => setDraggedId(t._id)}
+                        onDragEnd={() => { setDraggedId(null); setDragOverCol(null); }}
+                        className={`cursor-grab active:cursor-grabbing ${draggedId === t._id ? 'opacity-40' : ''}`}
+                      >
+                        <TaskCard task={t} onEdit={openEdit} onDelete={deleteTask} onStatusChange={changeStatus} />
+                      </div>
                     ))
                   )}
                 </div>
