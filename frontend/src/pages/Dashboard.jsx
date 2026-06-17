@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import ProjectCard from '../components/ProjectCard';
 import api from '../api/axios';
+import { undoableDelete } from '../lib/undoToast';
 
 const COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
@@ -99,15 +100,21 @@ export default function Dashboard() {
     }
   };
 
-  const deleteProject = async (id) => {
-    if (!confirm('Delete this project and all its tasks?')) return;
-    try {
-      await api.delete(`/projects/${id}`);
-      setProjects(projects.filter((p) => p._id !== id));
-      toast.success('Project deleted');
-    } catch {
-      toast.error('Failed to delete project');
-    }
+  const deleteProject = (id) => {
+    const idx = projects.findIndex((p) => p._id === id);
+    if (idx === -1) return;
+    const target = projects[idx];
+    undoableDelete({
+      label: 'Project',
+      onRemove: () => setProjects((cur) => cur.filter((p) => p._id !== id)),
+      onRestore: () => setProjects((cur) => {
+        if (cur.some((p) => p._id === id)) return cur;
+        const next = [...cur];
+        next.splice(idx, 0, target);
+        return next;
+      }),
+      commit: () => api.delete(`/projects/${id}`),
+    });
   };
 
   const totalTasks = projects.reduce((a, p) => a + p.taskCount, 0);
