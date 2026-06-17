@@ -45,9 +45,9 @@ export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
             </div>
           </div>
         </div>
-        <div className="flex gap-2 flex-shrink-0">
-          <button onClick={() => onEdit(task)} className="text-gray-500 hover:text-white text-xs transition-colors">Edit</button>
-          <button onClick={() => onDelete(task._id)} className="text-gray-500 hover:text-red-400 text-xs transition-colors">Del</button>
+        <div className="flex gap-1 flex-shrink-0">
+          <button onClick={() => onEdit(task)} className="px-2 py-0.5 rounded text-gray-400 hover:text-white hover:bg-gray-800 text-xs transition-colors">Edit</button>
+          <button onClick={() => onDelete(task._id)} className="px-2 py-0.5 rounded text-gray-400 hover:text-red-400 hover:bg-gray-800 text-xs transition-colors">Del</button>
         </div>
       </div>
     </div>

@@ -53,14 +53,15 @@ export default function ProjectCard({ project, onDelete, onRefresh }) {
               onClick={handleRefresh}
               disabled={refreshing}
               title="Refresh from GitHub"
-              className="text-gray-600 hover:text-primary-400 transition-colors text-sm leading-none disabled:opacity-50"
+              className="p-1 rounded text-gray-400 hover:text-primary-400 hover:bg-gray-800 transition-colors text-sm leading-none disabled:opacity-50"
             >
               <span className={`inline-block ${refreshing ? 'animate-spin' : ''}`}>↻</span>
             </button>
           )}
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(project._id); }}
-            className="text-gray-600 hover:text-red-400 transition-colors text-lg leading-none"
+            title="Delete project"
+            className="p-1 rounded text-gray-400 hover:text-red-400 hover:bg-gray-800 transition-colors text-lg leading-none"
           >
             ×
           </button>
@@ -72,21 +73,29 @@ export default function ProjectCard({ project, onDelete, onRefresh }) {
       )}
 
       {isGithub ? (
-        <div className="mt-4 flex items-center gap-4 text-xs text-gray-500">
-          {project.github?.language && <span>{project.github.language}</span>}
-          <span>★ {project.github?.stars ?? 0}</span>
-          <span>{project.github?.openIssues ?? 0} issues</span>
-          {loc != null && <span>{loc.toLocaleString()} LOC</span>}
-          <span className="ml-auto">updated {timeAgo(project.github?.lastPush)}</span>
-          <a
-            href={project.github?.htmlUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="text-primary-400 hover:text-primary-300"
-          >
-            GitHub ↗
-          </a>
+        <div className="mt-4 space-y-3">
+          <div className="flex flex-wrap gap-2 text-xs text-gray-400">
+            {project.github?.language && (
+              <span className="bg-gray-800 rounded-full px-2 py-0.5">{project.github.language}</span>
+            )}
+            <span className="bg-gray-800 rounded-full px-2 py-0.5">★ {project.github?.stars ?? 0}</span>
+            <span className="bg-gray-800 rounded-full px-2 py-0.5">{project.github?.openIssues ?? 0} issues</span>
+            {loc != null && (
+              <span className="bg-gray-800 rounded-full px-2 py-0.5">{loc.toLocaleString()} LOC</span>
+            )}
+          </div>
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span>updated {timeAgo(project.github?.lastPush)}</span>
+            <a
+              href={project.github?.htmlUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-primary-400 hover:text-primary-300"
+            >
+              GitHub ↗
+            </a>
+          </div>
         </div>
       ) : (
         <div className="mt-4">
