@@ -1,4 +1,5 @@
 const rateLimit = require('express-rate-limit');
+const MongoStore = require('../utils/rateLimitStore');
 
 const base = {
   windowMs: 15 * 60 * 1000,
@@ -6,10 +7,14 @@ const base = {
   legacyHeaders: false,
 };
 
-// Login is the brute-force target: cap attempts per IP per window.
+// Coarse per-IP backstop against login floods. Per-account lockout handles
+// targeted attacks, so only failed attempts count here and the cap is loose
+// enough not to punish users sharing an IP (NAT, office, CGNAT).
 const loginLimiter = rateLimit({
   ...base,
-  max: 10,
+  max: 30,
+  skipSuccessfulRequests: true,
+  store: new MongoStore({ prefix: 'login:' }),
   message: { message: 'Too many login attempts, try again later' },
 });
 
@@ -18,7 +23,24 @@ const registerLimiter = rateLimit({
   ...base,
   windowMs: 60 * 60 * 1000,
   max: 5,
+  store: new MongoStore({ prefix: 'register:' }),
   message: { message: 'Too many accounts created, try again later' },
 });
 
-module.exports = { loginLimiter, registerLimiter };
+// Broad cap on all authenticated API traffic per IP.
+const apiLimiter = rateLimit({
+  ...base,
+  max: 300,
+  store: new MongoStore({ prefix: 'api:' }),
+  message: { message: 'Too many requests, slow down' },
+});
+
+// GitHub routes proxy an external rate-limited API: keep them tighter.
+const githubLimiter = rateLimit({
+  ...base,
+  max: 30,
+  store: new MongoStore({ prefix: 'github:' }),
+  message: { message: 'Too many GitHub requests, try again later' },
+});
+
+module.exports = { loginLimiter, registerLimiter, apiLimiter, githubLimiter };

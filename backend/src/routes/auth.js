@@ -6,6 +6,9 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const { loginLimiter, registerLimiter } = require('../middleware/rateLimiters');
 
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCK_MS = 15 * 60 * 1000;
+
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
@@ -67,8 +70,25 @@ router.post(
       const user = await User.findOne({ email });
       if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
+      if (user.lockUntil && user.lockUntil > Date.now())
+        return res.status(429).json({ message: 'Account locked, try again later' });
+
       const match = await bcrypt.compare(password, user.password);
-      if (!match) return res.status(400).json({ message: 'Invalid credentials' });
+      if (!match) {
+        user.failedLoginAttempts += 1;
+        if (user.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
+          user.lockUntil = new Date(Date.now() + LOCK_MS);
+          user.failedLoginAttempts = 0;
+        }
+        await user.save();
+        return res.status(400).json({ message: 'Invalid credentials' });
+      }
+
+      if (user.failedLoginAttempts > 0 || user.lockUntil) {
+        user.failedLoginAttempts = 0;
+        user.lockUntil = null;
+        await user.save();
+      }
 
       sendAuth(res, user);
     } catch {
