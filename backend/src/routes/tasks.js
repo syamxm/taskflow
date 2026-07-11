@@ -55,7 +55,7 @@ router.put('/:id', auth, taskRules(false), validate, async (req, res) => {
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, owner: req.user.id },
       updates,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!task) return res.status(404).json({ message: 'Task not found' });
     res.json(task);

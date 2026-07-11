@@ -29,7 +29,7 @@ class MongoStore {
     const current = await RateLimitHit.findOneAndUpdate(
       { _id: id, expiresAt: { $gt: now } },
       { $inc: { count: 1 } },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (current) return { totalHits: current.count, resetTime: current.expiresAt };
 
@@ -37,7 +37,7 @@ class MongoStore {
     const fresh = await RateLimitHit.findOneAndUpdate(
       { _id: id },
       { $set: { count: 1, expiresAt: resetTime } },
-      { new: true, upsert: true }
+      { returnDocument: 'after', upsert: true }
     );
     return { totalHits: fresh.count, resetTime: fresh.expiresAt };
   }
