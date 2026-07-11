@@ -33,7 +33,7 @@ Security hardening applied across the app and deployment:
 - **Input validation** via `express-validator` (length caps, enums, ID/format checks) on all write routes.
 - **Authorization checks** — every project/task/GitHub query is scoped to the owner (no IDOR); update fields are whitelisted (no mass-assignment / NoSQL injection).
 - **GitHub tokens encrypted at rest** with AES-256-GCM.
-- **HTTP hardening** — `helmet`, locked CORS (`CORS_ORIGIN`, rejects all cross-origin when unset), request body caps (10kb API / 1m proxy), and nginx security headers: a Content-Security-Policy, HSTS (preload), `X-Frame-Options`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, and COOP/COEP/CORP. `server_tokens` is off; the real client IP is taken from `CF-Connecting-IP` only within Cloudflare's address range.
+- **HTTP hardening** — `helmet`, locked CORS (`CORS_ORIGIN`, rejects all cross-origin when unset), request body caps (10kb API / 1m proxy), and nginx security headers: a Content-Security-Policy, HSTS (preload), `X-Frame-Options`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, and `Cross-Origin-Opener-Policy`. `server_tokens` is off; the real client IP is taken from `CF-Connecting-IP` only within Cloudflare's address range.
 - **MongoDB authentication required**; the exposed `mongo-express` admin UI was removed.
 - **Network isolation** — only nginx is reachable from outside (via the external `proxy-net`); MongoDB, the API, and the static frontend sit on an `internal` Docker network with no published ports.
 - **Container hardening** — non-root backend (`node:20-alpine`) and a multi-stage frontend served by `nginx-unprivileged` (non-root); reproducible `npm ci` builds from committed lockfiles.
@@ -48,13 +48,15 @@ Every pull request and dev-branch push runs the full security scan suite plus bu
 PR / push to any non-main branch   →  .github/workflows/security.yml
     ├─ security        (reusable scan suite — see table below)
     ├─ frontend-build  (npm ci && npm run build)
-    ├─ backend-smoke   (boot against mongo:7, poll /api/health)
-    └─ dast            (OWASP ZAP baseline against the live stack)
+    └─ backend-smoke   (boot against mongo:7, poll /api/health)
 
 push to main / manual dispatch     →  .github/workflows/deploy.yml
     ├─ security        (same reusable scan suite — required gate)
     └─ deploy          (needs: security) → Tailscale tunnel → SSH → docker compose
                          serialized via a deploy-production concurrency lock
+
+weekly (Mon 02:00 UTC) / manual    →  .github/workflows/dast.yml
+    └─ dast            (OWASP ZAP baseline against an ephemeral compose stack — advisory)
 ```
 
 The scan suite lives in one reusable workflow, `security-scan.yml`, called by both `security.yml` and `deploy.yml`, so the gate is single-sourced (DRY) and PRs are checked against the exact suite that guards production.
@@ -64,19 +66,19 @@ The scan suite lives in one reusable workflow, `security-scan.yml`, called by bo
 | Tool | What it checks | Blocks merge/deploy? |
 |------|----------------|----------------------|
 | **Gitleaks** | Hardcoded secrets across full git history | Yes |
-| **Semgrep** | SAST — `p/default`, `p/javascript`, `p/nodejs`, `p/owasp-top-ten`, `p/secrets` | Yes |
-| **npm audit** | Known CVEs in production dependencies (`--omit=dev`, high+) | Yes |
+| **Semgrep** | SAST — `p/default`, `p/javascript`, `p/nodejs`, `p/owasp-top-ten` | Yes |
 | **Trivy (fs)** | Dependency CVEs in backend & frontend | Yes |
 | **Hadolint** | Dockerfile best-practices / hardening lint | Yes |
 | **Trivy (config)** | IaC misconfiguration (compose, Dockerfiles) | Yes |
 | **Trivy (image)** | CVEs in built backend & frontend images | Yes |
-| **OWASP ZAP** | DAST baseline against the running app | No (advisory) |
+| **OWASP ZAP** | DAST baseline, scheduled weekly (Mon 02:00 UTC) + on demand | No (advisory) |
+
+One tool per concern: Gitleaks owns secrets, Semgrep owns first-party code, Trivy owns dependency/image/IaC CVEs, Hadolint owns Dockerfile lint.
 
 Scans gate on `HIGH,CRITICAL` by default. Semgrep and Trivy image results are uploaded as SARIF and surface in the repo's **GitHub Security** tab.
 
 ### Supply chain
 
-- **SBOM** — a CycloneDX SBOM is generated per image and uploaded as a build artifact.
 - **Dependabot** — monthly updates for npm (backend + frontend), GitHub Actions, and Docker base images. Minor/patch updates are grouped and auto-merged (`dependabot-auto-merge.yml`); major bumps arrive as separate PRs for manual review.
 - Action versions are pinned and base images are digest-pinned (kept current by Dependabot).
 

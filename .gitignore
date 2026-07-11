@@ -58,3 +58,4 @@ mongo-data/
 .cache/
 coverage/
 .nyc_output/
+docs/*
