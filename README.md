@@ -80,7 +80,7 @@ Scans gate on `HIGH,CRITICAL` by default. Semgrep and Trivy image results are up
 ### Supply chain
 
 - **Dependabot** — monthly updates for npm (backend + frontend), GitHub Actions, and Docker base images. Minor/patch updates are grouped and auto-merged (`dependabot-auto-merge.yml`); major bumps arrive as separate PRs for manual review.
-- Action versions are pinned and base images are digest-pinned (kept current by Dependabot).
+- Actions and base images are version-tag pinned, with Dependabot raising monthly bump PRs.
 
 ### Accepted risk
 
@@ -115,8 +115,11 @@ Edit `backend/.env`:
 ### 3. Run
 
 ```bash
-docker compose up --build -d
+docker compose --env-file backend/.env up --build -d
 ```
+
+The `--env-file` flag lets compose read the Mongo root credentials for the
+`mongo` service; the backend container still loads the full `backend/.env`.
 
 App available at `http://localhost` (or your server's address).
 
@@ -153,6 +156,7 @@ cd frontend && npm install && npm run dev
 | GET | /api/github/repos | ✓ | List GitHub repos |
 | POST | /api/github/track | ✓ | Track a repo as a project |
 | POST | /api/github/sync/:id | ✓ | Sync tracked repo stats |
+| POST | /api/github/sync-all | ✓ | Sync all tracked repos |
 
 ## Deployment
 

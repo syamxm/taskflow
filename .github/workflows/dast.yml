@@ -26,7 +26,7 @@ jobs:
           COOKIE_SECURE=false
           EOF
       - name: Start ephemeral stack
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
+        run: docker compose --env-file backend/.env -f docker-compose.yml -f docker-compose.ci.yml up -d --build
       - name: Wait for app
         run: |
           for i in $(seq 1 30); do
@@ -44,4 +44,4 @@ jobs:
           allow_issue_writing: false
       - name: Tear down
         if: always()
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml down -v
+        run: docker compose --env-file backend/.env -f docker-compose.yml -f docker-compose.ci.yml down -v
