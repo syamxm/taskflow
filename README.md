@@ -36,7 +36,7 @@ Security hardening applied across the app and deployment:
 - **HTTP hardening** — `helmet`, locked CORS (`CORS_ORIGIN`, rejects all cross-origin when unset), request body caps (10kb API / 1m proxy), and nginx security headers: a Content-Security-Policy, HSTS (preload), `X-Frame-Options`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, and `Cross-Origin-Opener-Policy`. `server_tokens` is off; the real client IP is taken from `CF-Connecting-IP` only within Cloudflare's address range.
 - **MongoDB authentication required**; the exposed `mongo-express` admin UI was removed.
 - **Network isolation** — only nginx is reachable from outside (via the external `proxy-net`); MongoDB, the API, and the static frontend sit on an `internal` Docker network with no published ports.
-- **Container hardening** — non-root backend (`node:20-alpine`) and a multi-stage frontend served by `nginx-unprivileged` (non-root); reproducible `npm ci` builds from committed lockfiles.
+- **Container hardening** — non-root backend (`node:26-alpine`) and a multi-stage frontend served by `nginx-unprivileged` (non-root); reproducible `npm ci` builds from committed lockfiles.
 
 ## DevSecOps Pipeline
 
