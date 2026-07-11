@@ -16,7 +16,6 @@ permissions:
 jobs:
   security:
     uses: ./.github/workflows/security-scan.yml
-    secrets: inherit
 
   deploy:
     needs: security

@@ -5,3 +5,17 @@
 # is served as a static build behind nginx. Revisit when bumping vite past v5.
 GHSA-67mh-4wv8-2f99
 GHSA-gv7w-rqvm-qjhr
+
+# c-ares in the nginx-unprivileged:alpine base image; fixed in alpine
+# (1.34.8-r0) but the upstream image hasn't rebuilt yet. nginx serves static
+# files only — no resolver exposure to user input. Remove once the base image
+# ships the fixed package (next Dependabot docker PR or manual rebuild).
+# 2026-07-11: no longer flagged by the vuln DB despite c-ares 1.34.6-r0 still
+# installed — possibly withdrawn upstream, recheck before removing.
+CVE-2026-33630
+
+# undici bundled inside the npm CLI's own node_modules in node:20-alpine.
+# npm is not executed in the running container (CMD is plain node); the
+# vulnerable code path is never loaded. Remove when the node:20-alpine image
+# ships an npm with undici >= 6.27.0.
+CVE-2026-12151
