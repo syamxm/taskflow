@@ -12,7 +12,6 @@ permissions:
 jobs:
   security:
     uses: ./.github/workflows/security-scan.yml
-    secrets: inherit
 
   frontend-build:
     runs-on: ubuntu-latest
