@@ -106,6 +106,7 @@ jobs:
           trivyignores: .trivyignore
           exit-code: '1'
           format: sarif
+          limit-severities-for-sarif: true
           output: trivy-${{ matrix.image }}.sarif
       - name: Upload SARIF
         if: always()
