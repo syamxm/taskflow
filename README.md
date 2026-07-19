@@ -40,53 +40,36 @@ Security hardening applied across the app and deployment:
 
 ## DevSecOps Pipeline
 
-Every pull request and dev-branch push runs the full security scan suite plus build/smoke checks. A push to `main` re-runs the **same** suite as a hard gate — deployment only proceeds if it passes.
+Every push and PR runs the security scans. On a push to `main` the same scans act as a hard gate — the deploy job only runs if they all pass.
 
 ### Flow
 
 ```
-PR / push to any non-main branch   →  .github/workflows/security.yml
-    ├─ security        (reusable scan suite — see table below)
-    ├─ frontend-build  (npm ci && npm run build)
-    └─ backend-smoke   (boot against mongo:7, poll /api/health)
-
-push to main / manual dispatch     →  .github/workflows/deploy.yml
-    ├─ security        (same reusable scan suite — required gate)
-    └─ deploy          (needs: security) → Tailscale tunnel → SSH → docker compose
+any push / PR to main / dispatch   →  .github/workflows/deploy.yml
+    ├─ gitleaks        (secret scan across full git history)
+    ├─ semgrep         (SAST)
+    ├─ trivy           (repo misconfig scan + build both images cold + image CVE scans)
+    └─ deploy          (main push only; needs: all of the above)
+                         → Tailscale tunnel → SSH → docker compose
                          serialized via a deploy-production concurrency lock
-
-weekly (Mon 02:00 UTC) / manual    →  .github/workflows/dast.yml
-    └─ dast            (OWASP ZAP baseline against an ephemeral compose stack — advisory)
 ```
-
-The scan suite lives in one reusable workflow, `security-scan.yml`, called by both `security.yml` and `deploy.yml`, so the gate is single-sourced (DRY) and PRs are checked against the exact suite that guards production.
 
 ### Scanners
 
-| Tool | What it checks | Blocks merge/deploy? |
-|------|----------------|----------------------|
+| Tool | What it checks | Blocks deploy? |
+|------|----------------|----------------|
 | **Gitleaks** | Hardcoded secrets across full git history | Yes |
 | **Semgrep** | SAST — `p/default`, `p/javascript`, `p/nodejs`, `p/owasp-top-ten` | Yes |
-| **Trivy (fs)** | Dependency CVEs in backend & frontend | Yes |
-| **Hadolint** | Dockerfile best-practices / hardening lint | Yes |
-| **Trivy (config)** | IaC misconfiguration (compose, Dockerfiles) | Yes |
+| **Trivy (fs)** | Misconfiguration + secrets in repo config | Yes |
 | **Trivy (image)** | CVEs in built backend & frontend images | Yes |
-| **OWASP ZAP** | DAST baseline, scheduled weekly (Mon 02:00 UTC) + on demand | No (advisory) |
 
-One tool per concern: Gitleaks owns secrets, Semgrep owns first-party code, Trivy owns dependency/image/IaC CVEs, Hadolint owns Dockerfile lint.
-
-Scans gate on `HIGH,CRITICAL` by default. Semgrep and Trivy image results are uploaded as SARIF and surface in the repo's **GitHub Security** tab.
-
-### Supply chain
-
-- **Dependabot** — monthly updates for npm (backend + frontend), GitHub Actions, and Docker base images. Minor/patch updates are grouped and auto-merged (`dependabot-auto-merge.yml`); major bumps arrive as separate PRs for manual review.
-- Actions and base images are version-tag pinned, with Dependabot raising monthly bump PRs.
+Scans gate on `HIGH,CRITICAL`.
 
 ### Accepted risk
 
 `.trivyignore` holds vetted exceptions — each entry must carry a justification and a recheck trigger (e.g. the esbuild dev-server CVEs, which never ship to production).
 
-Pipeline config lives at the repo root: `.gitleaks.toml`, `.hadolint.yaml`, `.trivyignore`, `.zap/rules.tsv`, and the CI compose override `docker-compose.ci.yml`.
+Pipeline config lives at the repo root: `.gitleaks.toml` and `.trivyignore`.
 
 ## Quick Start
 
