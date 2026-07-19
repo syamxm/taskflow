@@ -21,7 +21,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Toaster
           position="top-right"
           toastOptions={{
-            style: { background: '#12101b', color: '#f6f5fa', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.875rem' },
+            style: {
+              background: 'rgb(var(--gray-900))',
+              color: 'rgb(var(--gray-50))',
+              border: '1px solid rgb(var(--ink) / 0.1)',
+              borderRadius: '0.875rem',
+            },
           }}
         />
       </AuthProvider>

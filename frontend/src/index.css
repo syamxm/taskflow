@@ -3,21 +3,117 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-gray-950 text-gray-100 antialiased font-sans;
-    caret-color: #a78bfa;
+  :root {
+    --ink: 255 255 255;
+
+    --gray-50: 246 245 250;
+    --gray-100: 235 234 242;
+    --gray-200: 216 214 227;
+    --gray-300: 182 179 198;
+    --gray-400: 143 139 163;
+    --gray-500: 108 104 127;
+    --gray-600: 76 72 94;
+    --gray-700: 49 46 64;
+    --gray-800: 32 29 44;
+    --gray-900: 18 16 27;
+    --gray-950: 5 5 5;
+
+    --primary-50: 245 243 255;
+    --primary-100: 237 233 254;
+    --primary-200: 221 214 254;
+    --primary-300: 196 181 253;
+    --primary-400: 167 139 250;
+    --primary-500: 139 92 246;
+    --primary-600: 124 58 237;
+    --primary-700: 109 40 217;
+
+    --red-300: 252 165 165;
+    --red-400: 248 113 113;
+    --red-500: 239 68 68;
+    --red-900: 127 29 29;
+    --yellow-400: 250 204 21;
+    --yellow-500: 234 179 8;
+    --yellow-900: 113 63 18;
+    --green-400: 74 222 128;
+    --green-500: 34 197 94;
+    --green-900: 20 83 45;
+    --blue-400: 96 165 250;
+    --blue-500: 59 130 246;
+    --blue-900: 30 58 138;
+
+    --shadow-lift: 0 24px 48px -16px rgba(0, 0, 0, 0.6);
+    --shadow-glow: 0 0 32px -8px rgba(139, 92, 246, 0.35);
+    --caret: #a78bfa;
+    --selection-bg: #2a1f3d;
+    --selection-fg: #ffffff;
+    --focus-ring: rgba(167, 139, 250, 0.6);
+    --mesh:
+      radial-gradient(40rem 40rem at 15% -10%, rgba(124, 58, 237, 0.14), transparent 60%),
+      radial-gradient(36rem 36rem at 90% 110%, rgba(99, 102, 241, 0.1), transparent 60%);
   }
 
-  /* Ethereal mesh — two faint violet/indigo orbs, fixed behind everything */
+  [data-theme='pink'] {
+    --ink: 43 21 35;
+
+    --gray-50: 43 21 35;
+    --gray-100: 56 34 47;
+    --gray-200: 74 48 64;
+    --gray-300: 93 60 78;
+    --gray-400: 111 73 93;
+    --gray-500: 127 87 107;
+    --gray-600: 138 95 117;
+    --gray-700: 236 213 224;
+    --gray-800: 244 227 236;
+    --gray-900: 255 250 252;
+    --gray-950: 253 243 247;
+
+    --primary-50: 253 242 248;
+    --primary-100: 252 231 243;
+    --primary-200: 251 207 232;
+    --primary-300: 168 62 110;
+    --primary-400: 194 65 127;
+    --primary-500: 242 154 194;
+    --primary-600: 245 169 205;
+    --primary-700: 231 134 181;
+
+    --red-300: 159 18 57;
+    --red-400: 190 18 60;
+    --red-500: 225 29 72;
+    --red-900: 251 113 133;
+    --yellow-400: 161 98 7;
+    --yellow-500: 217 119 6;
+    --yellow-900: 251 191 36;
+    --green-400: 21 128 61;
+    --green-500: 22 163 74;
+    --green-900: 74 222 128;
+    --blue-400: 29 78 216;
+    --blue-500: 59 130 246;
+    --blue-900: 96 165 250;
+
+    --shadow-lift: 0 24px 48px -16px rgba(43, 21, 35, 0.18);
+    --shadow-glow: 0 0 32px -8px rgba(236, 72, 153, 0.25);
+    --caret: #c2417f;
+    --selection-bg: #fbcfe8;
+    --selection-fg: #2b1523;
+    --focus-ring: rgba(194, 65, 127, 0.6);
+    --mesh:
+      radial-gradient(40rem 40rem at 15% -10%, rgba(244, 114, 182, 0.18), transparent 60%),
+      radial-gradient(36rem 36rem at 90% 110%, rgba(251, 146, 60, 0.1), transparent 60%);
+  }
+
+  body {
+    @apply bg-gray-950 text-gray-100 antialiased font-sans;
+    caret-color: var(--caret);
+  }
+
+  /* Ethereal mesh — two faint orbs, fixed behind everything */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background:
-      radial-gradient(40rem 40rem at 15% -10%, rgba(124, 58, 237, 0.14), transparent 60%),
-      radial-gradient(36rem 36rem at 90% 110%, rgba(99, 102, 241, 0.1), transparent 60%);
+    background: var(--mesh);
   }
 
   /* Film grain, fixed overlay */
@@ -32,12 +128,12 @@
   }
 
   ::selection {
-    background-color: #2a1f3d;
-    color: #ffffff;
+    background-color: var(--selection-bg);
+    color: var(--selection-fg);
   }
 
   :focus-visible {
-    outline: 2px solid rgba(167, 139, 250, 0.6);
+    outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
 }

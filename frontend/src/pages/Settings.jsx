@@ -2,12 +2,19 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import api from '../api/axios';
+import { THEMES, getTheme, setTheme } from '../lib/theme';
 
 export default function Settings() {
   const [status, setStatus] = useState({ connected: false, username: null });
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [theme, setThemeState] = useState(getTheme);
+
+  const changeTheme = (value) => {
+    setTheme(value);
+    setThemeState(value);
+  };
 
   const fetchStatus = async () => {
     try {
@@ -59,7 +66,27 @@ export default function Settings() {
           <h2 className="text-2xl font-bold tracking-tight text-white">Settings</h2>
         </div>
 
-        <div className="rounded-card bg-white/[0.02] ring-1 ring-white/5 p-1.5 animate-reveal" style={{ animationDelay: '100ms' }}>
+        <div className="rounded-card bg-white/[0.02] ring-1 ring-white/5 p-1.5 mb-4 animate-reveal" style={{ animationDelay: '100ms' }}>
+          <div className="rounded-card-inner bg-gray-900/80 shadow-glass-inset border border-white/10 p-7">
+            <h3 className="font-bold tracking-tight text-white mb-1.5">Appearance</h3>
+            <p className="text-sm text-gray-400 mb-6">Theme applies instantly and is remembered on this device.</p>
+            <div className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] p-1">
+              {THEMES.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => changeTheme(t.value)}
+                  className={`px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-500 ease-fluid ${
+                    theme === t.value ? 'bg-primary-600 text-white shadow-glow' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-card bg-white/[0.02] ring-1 ring-white/5 p-1.5 animate-reveal" style={{ animationDelay: '160ms' }}>
           <div className="rounded-card-inner bg-gray-900/80 shadow-glass-inset border border-white/10 p-7">
             <h3 className="font-bold tracking-tight text-white mb-1.5">GitHub</h3>
             <p className="text-sm text-gray-400 mb-6">
