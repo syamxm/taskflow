@@ -4,12 +4,19 @@ import Navbar from '../components/Navbar';
 import api from '../api/axios';
 import { THEMES, getTheme, setTheme } from '../lib/theme';
 
+const fieldClass =
+  'w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 transition-colors duration-500 ease-fluid focus:outline-none focus:border-primary-400/60 focus:bg-white/[0.06]';
+
+const EMPTY_PW = { current: '', next: '', confirm: '' };
+
 export default function Settings() {
   const [status, setStatus] = useState({ connected: false, username: null });
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [theme, setThemeState] = useState(getTheme);
+  const [pw, setPw] = useState(EMPTY_PW);
+  const [changing, setChanging] = useState(false);
 
   const changeTheme = (value) => {
     setTheme(value);
@@ -41,6 +48,22 @@ export default function Settings() {
       toast.error(err.response?.data?.message || 'Failed to connect');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const changePassword = async (e) => {
+    e.preventDefault();
+    if (pw.next.length < 6) return toast.error('New password must be at least 6 characters');
+    if (pw.next !== pw.confirm) return toast.error('New passwords do not match');
+    setChanging(true);
+    try {
+      await api.put('/auth/password', { currentPassword: pw.current, newPassword: pw.next });
+      setPw(EMPTY_PW);
+      toast.success('Password updated');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update password');
+    } finally {
+      setChanging(false);
     }
   };
 
@@ -86,7 +109,63 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="rounded-card bg-white/[0.02] ring-1 ring-white/5 p-1.5 animate-reveal" style={{ animationDelay: '160ms' }}>
+        <div className="rounded-card bg-white/[0.02] ring-1 ring-white/5 p-1.5 mb-4 animate-reveal" style={{ animationDelay: '160ms' }}>
+          <div className="rounded-card-inner bg-gray-900/80 shadow-glass-inset border border-white/10 p-7">
+            <h3 className="font-bold tracking-tight text-white mb-1.5">Password</h3>
+            <p className="text-sm text-gray-400 mb-6">Change the password you use to sign in.</p>
+            <form onSubmit={changePassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">Current password</label>
+                <input
+                  type="password"
+                  value={pw.current}
+                  onChange={(e) => setPw({ ...pw, current: e.target.value })}
+                  required
+                  autoComplete="current-password"
+                  className={fieldClass}
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1.5">New password</label>
+                  <input
+                    type="password"
+                    value={pw.next}
+                    onChange={(e) => setPw({ ...pw, next: e.target.value })}
+                    required
+                    minLength={6}
+                    autoComplete="new-password"
+                    className={fieldClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1.5">Confirm new password</label>
+                  <input
+                    type="password"
+                    value={pw.confirm}
+                    onChange={(e) => setPw({ ...pw, confirm: e.target.value })}
+                    required
+                    minLength={6}
+                    autoComplete="new-password"
+                    className={fieldClass}
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={changing}
+                className="group flex items-center gap-2 rounded-full bg-primary-600 hover:bg-primary-500 pl-5 pr-1.5 py-1.5 text-xs font-semibold text-white transition-all duration-500 ease-fluid active:scale-[0.98] shadow-glow disabled:opacity-50"
+              >
+                <span>{changing ? 'Updating…' : 'Update password'}</span>
+                <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center transition-transform duration-500 ease-fluid group-hover:translate-x-0.5 group-hover:-translate-y-px">
+                  ↗
+                </span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div className="rounded-card bg-white/[0.02] ring-1 ring-white/5 p-1.5 animate-reveal" style={{ animationDelay: '220ms' }}>
           <div className="rounded-card-inner bg-gray-900/80 shadow-glass-inset border border-white/10 p-7">
             <h3 className="font-bold tracking-tight text-white mb-1.5">GitHub</h3>
             <p className="text-sm text-gray-400 mb-6">
@@ -117,7 +196,7 @@ export default function Settings() {
                   onChange={(e) => setToken(e.target.value)}
                   required
                   placeholder="ghp_..."
-                  className="w-full font-mono bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 transition-colors duration-500 ease-fluid focus:outline-none focus:border-primary-400/60 focus:bg-white/[0.06]"
+                  className={`${fieldClass} font-mono`}
                 />
                 <button
                   type="submit"

@@ -43,4 +43,14 @@ const githubLimiter = rateLimit({
   message: { message: 'Too many GitHub requests, try again later' },
 });
 
-module.exports = { loginLimiter, registerLimiter, apiLimiter, githubLimiter };
+// Counts only failed attempts so a user can't brute-force their way past
+// the login lockout via the password-change endpoint.
+const passwordLimiter = rateLimit({
+  ...base,
+  max: 10,
+  skipSuccessfulRequests: true,
+  store: new MongoStore({ prefix: 'password:' }),
+  message: { message: 'Too many attempts, try again later' },
+});
+
+module.exports = { loginLimiter, registerLimiter, apiLimiter, githubLimiter, passwordLimiter };

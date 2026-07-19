@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
-const { loginLimiter, registerLimiter } = require('../middleware/rateLimiters');
+const { loginLimiter, registerLimiter, passwordLimiter } = require('../middleware/rateLimiters');
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_MS = 15 * 60 * 1000;
@@ -91,6 +91,36 @@ router.post(
       }
 
       sendAuth(res, user);
+    } catch {
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+);
+
+// PUT /api/auth/password
+router.put(
+  '/password',
+  auth,
+  passwordLimiter,
+  [
+    body('currentPassword').notEmpty().withMessage('Current password required'),
+    body('newPassword').isLength({ min: 6 }).withMessage('Password min 6 chars'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const { currentPassword, newPassword } = req.body;
+    try {
+      const user = await User.findById(req.user.id);
+      if (!user) return res.status(401).json({ message: 'Token invalid' });
+
+      const match = await bcrypt.compare(currentPassword, user.password);
+      if (!match) return res.status(400).json({ message: 'Invalid credentials' });
+
+      user.password = await bcrypt.hash(newPassword, 12);
+      await user.save();
+      res.json({ message: 'Password updated' });
     } catch {
       res.status(500).json({ message: 'Server error' });
     }
