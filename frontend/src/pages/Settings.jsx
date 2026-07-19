@@ -51,7 +51,7 @@ export default function Settings() {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <main className="max-w-xl mx-auto px-4 py-8">
+      <main className="max-w-xl mx-auto px-4 pt-24 pb-16">
         <h2 className="text-lg font-semibold text-white mb-4">Settings</h2>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
           <h3 className="font-semibold text-white mb-1">GitHub</h3>

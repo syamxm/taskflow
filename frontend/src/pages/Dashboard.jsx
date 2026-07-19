@@ -9,6 +9,12 @@ import { SkeletonGrid } from '../components/Skeleton';
 
 const COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
+const inputClass =
+  'w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 transition-colors duration-500 ease-fluid focus:outline-none focus:border-primary-400/60 focus:bg-white/[0.06]';
+
+const ghostButtonClass =
+  'rounded-full border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] px-4 py-2 text-xs font-medium text-gray-300 hover:text-white transition-all duration-500 ease-fluid active:scale-[0.98] disabled:opacity-50';
+
 export default function Dashboard() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -141,59 +147,66 @@ export default function Dashboard() {
   }, [projects, query, sortBy, filter]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-[100dvh]">
       <Navbar />
-      <main className="max-w-5xl mx-auto px-4 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {[
-            { label: 'Projects', value: projects.length },
-            { label: 'Total Tasks', value: totalTasks },
-            { label: 'Completed', value: doneTasks },
-          ].map((s) => (
-            <div key={s.label} className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-white">{s.value}</div>
-              <div className="text-xs text-gray-500 mt-1">{s.label}</div>
+      <main className="max-w-5xl mx-auto px-4 pt-24 pb-16">
+        {/* Stats bento */}
+        <div className="grid gap-3 md:grid-cols-2 mb-12 animate-reveal">
+          <div className="rounded-card bg-white/[0.02] ring-1 ring-white/5 p-1.5">
+            <div className="rounded-card-inner h-full bg-gray-900/80 shadow-glass-inset border border-white/10 p-7 flex flex-col justify-between gap-6">
+              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-medium text-primary-300 w-max">
+                Projects
+              </span>
+              <div className="text-6xl font-extrabold tracking-tight tabular-nums text-white">{projects.length}</div>
             </div>
-          ))}
+          </div>
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-1">
+            {[
+              { label: 'Total Tasks', value: totalTasks },
+              { label: 'Completed', value: doneTasks },
+            ].map((s) => (
+              <div key={s.label} className="rounded-card bg-white/[0.02] ring-1 ring-white/5 p-1.5">
+                <div className="rounded-card-inner h-full bg-gray-900/80 shadow-glass-inset border border-white/10 px-6 py-5 flex flex-col justify-between gap-2">
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-medium text-gray-500">{s.label}</span>
+                  <div className="text-3xl font-extrabold tracking-tight tabular-nums text-white">{s.value}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h2 className="text-lg font-semibold text-white">Projects</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5 animate-reveal" style={{ animationDelay: '100ms' }}>
+          <h2 className="text-xl font-bold tracking-tight text-white">Projects</h2>
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={refreshAll}
-              disabled={syncing}
-              className="px-4 py-1.5 text-sm text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
-            >
+            <button onClick={refreshAll} disabled={syncing} className={ghostButtonClass}>
               {syncing ? 'Refreshing…' : 'Refresh GitHub'}
             </button>
-            <button
-              onClick={openImport}
-              className="px-4 py-1.5 text-sm text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-            >
+            <button onClick={openImport} className={ghostButtonClass}>
               Import from GitHub
             </button>
             <button
               onClick={() => setShowForm(!showForm)}
-              className="px-4 py-1.5 text-sm text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+              className="group flex items-center gap-2 rounded-full bg-primary-600 hover:bg-primary-500 pl-4 pr-1.5 py-1.5 text-xs font-semibold text-white transition-all duration-500 ease-fluid active:scale-[0.98] shadow-glow"
             >
-              + New Project
+              <span>New Project</span>
+              <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center transition-transform duration-500 ease-fluid group-hover:rotate-90">
+                +
+              </span>
             </button>
           </div>
         </div>
 
         {/* Search / sort / filter */}
         {!loading && projects.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 mb-4">
+          <div className="flex flex-wrap items-center gap-2 mb-5 animate-reveal" style={{ animationDelay: '160ms' }}>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search projects…"
-              className="flex-1 min-w-[12rem] bg-gray-900 border border-gray-800 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500"
+              className="flex-1 min-w-[12rem] bg-white/[0.04] border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder-gray-500 transition-colors duration-500 ease-fluid focus:outline-none focus:border-primary-400/60 focus:bg-white/[0.06]"
             />
-            <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg p-0.5">
+            <div className="flex items-center rounded-full border border-white/10 bg-white/[0.04] p-1">
               {[
                 { value: 'all', label: 'All' },
                 { value: 'github', label: 'GitHub' },
@@ -202,7 +215,7 @@ export default function Dashboard() {
                 <button
                   key={opt.value}
                   onClick={() => setFilter(opt.value)}
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  className={`px-3 py-1 text-xs font-medium rounded-full transition-colors duration-500 ease-fluid ${
                     filter === opt.value ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-white'
                   }`}
                 >
@@ -213,7 +226,7 @@ export default function Dashboard() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-gray-900 border border-gray-800 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-none focus:border-primary-500"
+              className="bg-white/[0.04] border border-white/10 rounded-full px-4 py-2 text-xs font-medium text-gray-300 transition-colors duration-500 ease-fluid focus:outline-none focus:border-primary-400/60"
             >
               <option value="updated">Recently updated</option>
               <option value="name">Name</option>
@@ -225,94 +238,95 @@ export default function Dashboard() {
 
         {/* Import from GitHub */}
         {showImport && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-4">
-            {reposLoading ? (
-              <div className="flex justify-center py-6">
-                <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : repos.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">
-                No repos found. <Link to="/settings" className="text-primary-400 hover:text-primary-300">Check your GitHub connection</Link>.
-              </p>
-            ) : (
-              <div className="max-h-72 overflow-y-auto divide-y divide-gray-800">
-                {repos.map((r) => (
-                  <div key={r.repoId} className="flex items-center justify-between py-2.5">
-                    <div className="min-w-0">
-                      <div className="text-sm text-white truncate">{r.fullName}</div>
-                      <div className="text-xs text-gray-500">★ {r.stars} · {r.language || 'n/a'}</div>
+          <div className="rounded-card bg-white/[0.02] ring-1 ring-white/5 p-1.5 mb-5 animate-reveal">
+            <div className="rounded-card-inner bg-gray-900/80 shadow-glass-inset border border-white/10 p-5">
+              {reposLoading ? (
+                <div className="flex justify-center py-6">
+                  <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : repos.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-4">
+                  No repos found. <Link to="/settings" className="text-primary-400 hover:text-primary-300">Check your GitHub connection</Link>.
+                </p>
+              ) : (
+                <div className="max-h-72 overflow-y-auto divide-y divide-white/5">
+                  {repos.map((r) => (
+                    <div key={r.repoId} className="flex items-center justify-between py-2.5">
+                      <div className="min-w-0">
+                        <div className="text-sm text-white truncate">{r.fullName}</div>
+                        <div className="text-xs text-gray-500 tabular-nums">★ {r.stars} · {r.language || 'n/a'}</div>
+                      </div>
+                      <button
+                        onClick={() => trackRepo(r)}
+                        disabled={r.tracked}
+                        className="ml-3 rounded-full bg-primary-600 hover:bg-primary-500 px-3.5 py-1 text-xs font-semibold text-white transition-all duration-500 ease-fluid active:scale-[0.98] disabled:opacity-50 disabled:cursor-default"
+                      >
+                        {r.tracked ? 'Tracked' : 'Track'}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => trackRepo(r)}
-                      disabled={r.tracked}
-                      className="ml-3 px-3 py-1 text-xs rounded-lg transition-colors disabled:opacity-50 disabled:cursor-default text-white bg-primary-600 hover:bg-primary-700"
-                    >
-                      {r.tracked ? 'Tracked' : 'Track'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {/* New project form */}
         {showForm && (
-          <form onSubmit={createProject} className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-4 space-y-3">
-            <input
-              value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-500"
-              placeholder="Project name *"
-            />
-            <input
-              value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-500"
-              placeholder="Description (optional)"
-            />
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-400">Color:</span>
-              {COLORS.map((c) => (
-                <button key={c} type="button" onClick={() => setForm({ ...form, color: c })}
-                  className={`w-6 h-6 rounded-full transition-transform ${form.color === c ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-gray-900' : ''}`}
-                  style={{ backgroundColor: c }}
-                />
-              ))}
-              <button type="submit" className="ml-auto px-4 py-1.5 text-sm text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors">
-                Create
-              </button>
-            </div>
-          </form>
+          <div className="rounded-card bg-white/[0.02] ring-1 ring-white/5 p-1.5 mb-5 animate-reveal">
+            <form onSubmit={createProject} className="rounded-card-inner bg-gray-900/80 shadow-glass-inset border border-white/10 p-5 space-y-3">
+              <input
+                value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required
+                className={inputClass}
+                placeholder="Project name *"
+              />
+              <input
+                value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
+                className={inputClass}
+                placeholder="Description (optional)"
+              />
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-400">Color:</span>
+                {COLORS.map((c) => (
+                  <button key={c} type="button" onClick={() => setForm({ ...form, color: c })}
+                    className={`w-6 h-6 rounded-full transition-transform duration-500 ease-fluid ${form.color === c ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-gray-900' : 'hover:scale-110'}`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+                <button type="submit" className="ml-auto rounded-full bg-primary-600 hover:bg-primary-500 px-5 py-1.5 text-xs font-semibold text-white transition-all duration-500 ease-fluid active:scale-[0.98]">
+                  Create
+                </button>
+              </div>
+            </form>
+          </div>
         )}
 
         {/* Projects grid */}
         {loading ? (
           <SkeletonGrid />
         ) : projects.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-4xl mb-3">📋</p>
-            <p className="text-gray-400 mb-1">No projects yet</p>
-            <p className="text-sm text-gray-500 mb-5">Create one or import a repo from GitHub to get started.</p>
+          <div className="text-center py-24 animate-reveal">
+            <p className="text-4xl mb-4">📋</p>
+            <p className="text-lg font-semibold text-white mb-1">No projects yet</p>
+            <p className="text-sm text-gray-500 mb-6">Create one or import a repo from GitHub to get started.</p>
             <div className="flex items-center justify-center gap-2">
               <button
                 onClick={() => setShowForm(true)}
-                className="px-4 py-1.5 text-sm text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+                className="rounded-full bg-primary-600 hover:bg-primary-500 px-5 py-2 text-xs font-semibold text-white transition-all duration-500 ease-fluid active:scale-[0.98] shadow-glow"
               >
                 + New Project
               </button>
-              <button
-                onClick={openImport}
-                className="px-4 py-1.5 text-sm text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-              >
+              <button onClick={openImport} className={ghostButtonClass}>
                 Import from GitHub
               </button>
             </div>
           </div>
         ) : visibleProjects.length === 0 ? (
-          <div className="text-center py-16 text-gray-500">
+          <div className="text-center py-24 text-gray-500">
             <p>No projects match your search.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-reveal" style={{ animationDelay: '220ms' }}>
             {visibleProjects.map((p) => (
               <ProjectCard key={p._id} project={p} onDelete={deleteProject} onRefresh={refreshProject} />
             ))}

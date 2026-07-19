@@ -121,7 +121,7 @@ export default function ProjectView() {
   if (loading) return (
     <div className="min-h-screen">
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-4 pt-24 pb-16">
         <div className="h-6 w-48 rounded bg-gray-800 animate-pulse mb-6" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[0, 1, 2].map((c) => (
@@ -139,7 +139,7 @@ export default function ProjectView() {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-4 pt-24 pb-16">
         {/* Header */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <button onClick={() => navigate('/')} className="text-gray-500 hover:text-white text-sm transition-colors">
