@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 
-const EMPTY = { title: '', description: '', status: 'todo', priority: 'medium', dueDate: '' };
+const EMPTY = { title: '', description: '', status: 'todo', priority: 'medium', dueDate: '', assignee: '' };
 
 const fieldClass =
   'w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 transition-colors duration-500 ease-fluid focus:outline-none focus:border-primary-400/60 focus:bg-white/[0.06]';
 
-export default function TaskModal({ isOpen, onClose, onSubmit, task }) {
+export default function TaskModal({ isOpen, onClose, onSubmit, task, participants = [] }) {
   const [form, setForm] = useState(EMPTY);
 
   useEffect(() => {
@@ -16,6 +16,7 @@ export default function TaskModal({ isOpen, onClose, onSubmit, task }) {
         status: task.status,
         priority: task.priority,
         dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
+        assignee: task.assignee?._id || task.assignee || '',
       });
     } else {
       setForm(EMPTY);
@@ -28,7 +29,7 @@ export default function TaskModal({ isOpen, onClose, onSubmit, task }) {
 
   const submit = (e) => {
     e.preventDefault();
-    onSubmit({ ...form, dueDate: form.dueDate || null });
+    onSubmit({ ...form, dueDate: form.dueDate || null, assignee: form.assignee || null });
   };
 
   return (
@@ -79,9 +80,20 @@ export default function TaskModal({ isOpen, onClose, onSubmit, task }) {
                 </select>
               </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Due Date</label>
-              <input type="date" name="dueDate" value={form.dueDate} onChange={handle} className={fieldClass} />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">Due Date</label>
+                <input type="date" name="dueDate" value={form.dueDate} onChange={handle} className={fieldClass} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">Assignee</label>
+                <select name="assignee" value={form.assignee} onChange={handle} className={fieldClass}>
+                  <option value="">Unassigned</option>
+                  {participants.map((p) => (
+                    <option key={p._id} value={p._id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div className="flex gap-3 pt-2">
               <button

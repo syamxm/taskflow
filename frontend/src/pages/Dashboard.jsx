@@ -27,6 +27,7 @@ export default function Dashboard() {
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState('updated');
   const [filter, setFilter] = useState('all');
+  const [invites, setInvites] = useState([]);
 
   const fetchProjects = async () => {
     try {
@@ -39,7 +40,29 @@ export default function Dashboard() {
     }
   };
 
-  useEffect(() => { fetchProjects(); }, []);
+  const fetchInvites = async () => {
+    try {
+      const { data } = await api.get('/projects/invites');
+      setInvites(data);
+    } catch {
+      setInvites([]);
+    }
+  };
+
+  useEffect(() => { fetchProjects(); fetchInvites(); }, []);
+
+  const respondInvite = async (projectId, action) => {
+    try {
+      await api.post(`/projects/${projectId}/invites/${action}`);
+      setInvites((cur) => cur.filter((i) => i._id !== projectId));
+      if (action === 'accept') {
+        toast.success('Joined project');
+        fetchProjects();
+      }
+    } catch {
+      toast.error('Failed to respond to invite');
+    }
+  };
 
   const createProject = async (e) => {
     e.preventDefault();
@@ -174,6 +197,38 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+
+        {/* Pending invites */}
+        {invites.length > 0 && (
+          <div className="rounded-card bg-white/[0.02] ring-1 ring-white/5 p-1.5 mb-5 animate-reveal" style={{ animationDelay: '60ms' }}>
+            <div className="rounded-card-inner bg-gray-900/80 shadow-glass-inset border border-white/10 p-5">
+              <h3 className="text-[10px] uppercase tracking-[0.2em] font-medium text-primary-300 mb-4">Invites</h3>
+              <div className="divide-y divide-white/5">
+                {invites.map((inv) => (
+                  <div key={inv._id} className="flex flex-wrap items-center gap-3 py-2.5">
+                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: inv.color }} />
+                    <span className="text-sm text-white font-medium truncate">{inv.name}</span>
+                    <span className="text-xs text-gray-500">from {inv.owner?.name}</span>
+                    <div className="ml-auto flex items-center gap-2">
+                      <button
+                        onClick={() => respondInvite(inv._id, 'accept')}
+                        className="rounded-full bg-primary-600 hover:bg-primary-500 px-3.5 py-1 text-xs font-semibold text-white transition-all duration-500 ease-fluid active:scale-[0.98]"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => respondInvite(inv._id, 'decline')}
+                        className="rounded-full border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] px-3.5 py-1 text-xs font-medium text-gray-300 hover:text-white transition-all duration-500 ease-fluid active:scale-[0.98]"
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5 animate-reveal" style={{ animationDelay: '100ms' }}>

@@ -47,6 +47,7 @@ export default function RepoInsight({ project, onRefresh, refreshing }) {
         <div className="rounded-card-inner h-full bg-gray-900/80 shadow-glass-inset border border-white/10 p-6">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-[10px] uppercase tracking-[0.2em] font-medium text-gray-400">Branches</h3>
+            {onRefresh && (
             <button
               onClick={onRefresh}
               disabled={refreshing}
@@ -54,6 +55,7 @@ export default function RepoInsight({ project, onRefresh, refreshing }) {
             >
               {refreshing ? 'Refreshing…' : 'Refresh'}
             </button>
+            )}
           </div>
           {branches.length === 0 ? (
             <p className="text-xs text-gray-600 py-2">No branch data — press Refresh.</p>

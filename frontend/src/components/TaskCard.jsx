@@ -10,6 +10,9 @@ const STATUS_STYLES = {
   done: 'border-green-500/20 bg-green-900/30 text-green-400',
 };
 
+const initials = (name = '') =>
+  name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+
 export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
   const overdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'done';
 
@@ -37,6 +40,14 @@ export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
               <span className={`text-[11px] px-2.5 py-0.5 rounded-full border font-medium ${STATUS_STYLES[task.status]}`}>
                 {task.status}
               </span>
+              {task.assignee?.name && (
+                <span className="text-[11px] pl-1 pr-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.05] text-gray-300 inline-flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-primary-600/20 text-primary-300 flex items-center justify-center text-[8px] font-semibold">
+                    {initials(task.assignee.name)}
+                  </span>
+                  {task.assignee.name.split(' ')[0]}
+                </span>
+              )}
               {task.dueDate && (
                 <span className={`text-[11px] px-2.5 py-0.5 rounded-full border tabular-nums ${overdue ? 'border-red-500/20 bg-red-900/30 text-red-400' : 'border-white/10 bg-white/[0.05] text-gray-400'}`}>
                   {overdue ? '⚠ ' : ''}{new Date(task.dueDate).toLocaleDateString()}
