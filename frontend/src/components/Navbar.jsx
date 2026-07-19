@@ -10,6 +10,14 @@ export default function Navbar() {
           Task<span className="text-primary-400">Flow</span>
         </Link>
         <span className="hidden sm:block text-xs text-gray-500 mr-2 max-w-[10rem] truncate">{user?.name}</span>
+        {user?.role === 'admin' && (
+          <Link
+            to="/admin"
+            className="rounded-full px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors duration-500 ease-fluid"
+          >
+            Admin
+          </Link>
+        )}
         <Link
           to="/settings"
           className="rounded-full px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors duration-500 ease-fluid"

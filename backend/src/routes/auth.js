@@ -24,7 +24,7 @@ const sendAuth = (res, user, status = 200) =>
   res
     .cookie(COOKIE_NAME, signToken(user._id), cookieOptions)
     .status(status)
-    .json({ user: { id: user._id, name: user.name, email: user.email } });
+    .json({ user: { id: user._id, name: user.name, email: user.email, role: user.role || 'user' } });
 
 // POST /api/auth/register
 router.post(
