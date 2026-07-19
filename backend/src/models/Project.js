@@ -6,6 +6,8 @@ const projectSchema = new mongoose.Schema(
     description: { type: String, trim: true, default: '' },
     color: { type: String, default: '#6366f1' },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    pendingInvites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     source: { type: String, enum: ['manual', 'github'], default: 'manual' },
     github: {
       repoId: Number,

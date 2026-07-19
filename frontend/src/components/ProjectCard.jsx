@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function timeAgo(date) {
   if (!date) return '';
@@ -15,8 +16,11 @@ const badgeClass = 'rounded-full border border-white/10 bg-white/[0.05] px-2.5 p
 
 export default function ProjectCard({ project, onDelete, onRefresh }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const isGithub = project.source === 'github';
+  const myId = user?.id || user?._id;
+  const shared = myId && String(project.owner) !== String(myId);
   const loc = project.github?.loc?.total;
 
   const handleRefresh = async (e) => {
@@ -49,9 +53,14 @@ export default function ProjectCard({ project, onDelete, onRefresh }) {
               <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: project.color }} />
             )}
             <h3 className="font-semibold text-white truncate">{project.name}</h3>
+            {shared && (
+              <span className="rounded-full border border-primary-400/20 bg-primary-600/10 px-2 py-0.5 text-[10px] font-medium text-primary-300 flex-shrink-0">
+                shared
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
-            {isGithub && onRefresh && (
+            {!shared && isGithub && onRefresh && (
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
@@ -61,6 +70,7 @@ export default function ProjectCard({ project, onDelete, onRefresh }) {
                 <span className={`inline-block ${refreshing ? 'animate-spin' : ''}`}>↻</span>
               </button>
             )}
+            {!shared && (
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(project._id); }}
               title="Delete project"
@@ -68,6 +78,7 @@ export default function ProjectCard({ project, onDelete, onRefresh }) {
             >
               ×
             </button>
+            )}
           </div>
         </div>
 
