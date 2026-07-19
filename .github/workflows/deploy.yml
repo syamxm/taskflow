@@ -94,6 +94,7 @@ jobs:
             set -e
             cd ~/taskflow
             git fetch origin main
+            git checkout main
             git reset --hard origin/main
             docker compose --env-file backend/.env up -d --build --remove-orphans
             docker image prune -f
