@@ -2,24 +2,80 @@ name: Deploy TaskFlow
 
 on:
   push:
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
-concurrency:
-  group: deploy-production
-  cancel-in-progress: false
-
 permissions:
   contents: read
-  security-events: write
 
 jobs:
-  security:
-    uses: ./.github/workflows/security-scan.yml
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Scan for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  semgrep:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v7
+      - name: Static analysis
+        run: |
+          semgrep scan --error --severity ERROR \
+            --config p/default --config p/javascript --config p/nodejs \
+            --config p/owasp-top-ten
+
+  trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Scan repo for misconfigurations
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: misconfig,secret
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          trivyignores: .trivyignore
+      - name: Build backend image
+        run: docker build -t taskflow-backend:ci backend
+      - name: Scan backend image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: taskflow-backend:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+          trivyignores: .trivyignore
+      - name: Build frontend image
+        run: docker build -t taskflow-frontend:ci frontend
+      - name: Scan frontend image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: taskflow-frontend:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+          trivyignores: .trivyignore
 
   deploy:
-    needs: security
+    needs: [gitleaks, semgrep, trivy]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
     steps:
       - name: Connect to Tailscale
         uses: tailscale/github-action@v3
@@ -27,7 +83,6 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:ci
-
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
         with:
