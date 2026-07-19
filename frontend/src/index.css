@@ -4,12 +4,40 @@
 
 @layer base {
   body {
-    @apply bg-gray-950 text-gray-100 antialiased;
-    caret-color: #d6b3ff;
+    @apply bg-gray-950 text-gray-100 antialiased font-sans;
+    caret-color: #a78bfa;
+  }
+
+  /* Ethereal mesh — two faint violet/indigo orbs, fixed behind everything */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(40rem 40rem at 15% -10%, rgba(124, 58, 237, 0.14), transparent 60%),
+      radial-gradient(36rem 36rem at 90% 110%, rgba(99, 102, 241, 0.1), transparent 60%);
+  }
+
+  /* Film grain, fixed overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   ::selection {
     background-color: #2a1f3d;
     color: #ffffff;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgba(167, 139, 250, 0.6);
+    outline-offset: 2px;
   }
 }

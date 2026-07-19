@@ -59,3 +59,6 @@ mongo-data/
 coverage/
 .nyc_output/
 docs/*
+.agents/
+.claude/
+skills-lock.json
