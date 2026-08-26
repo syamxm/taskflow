@@ -1,8 +1,16 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   mongo:
-    image: mongo:7
+    # mongo:7
+    image: mongo@sha256:4b5bf3c2bb7516164f6dcb44acce4fdcb428abfe5771a1128304a0f34ab9ff7c
     container_name: taskflow-mongo
     restart: unless-stopped
+    command: ["mongod", "--wiredTigerCacheSizeGB", "0.5"]
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:?set in backend/.env — run compose with --env-file backend/.env}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:?set in backend/.env — run compose with --env-file backend/.env}
@@ -10,10 +18,13 @@ services:
       - mongo_data:/data/db
     networks:
       - internal
+    mem_limit: 1g
+    cpus: 2.0
+    logging: *default-logging
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
-      interval: 15s
-      timeout: 5s
+      test: ["CMD", "bash", "-c", "</dev/tcp/127.0.0.1/27017"]
+      interval: 30s
+      timeout: 3s
       retries: 5
       start_period: 20s
 
@@ -27,6 +38,9 @@ services:
         condition: service_healthy
     networks:
       - internal
+    mem_limit: 512m
+    cpus: 2.0
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:5000/api/health"]
       interval: 30s
@@ -40,9 +54,13 @@ services:
     restart: unless-stopped
     networks:
       - internal
+    mem_limit: 128m
+    cpus: 0.5
+    logging: *default-logging
 
   nginx:
-    image: nginx:1.31-alpine
+    # nginx:1.31-alpine
+    image: nginx@sha256:8b1e78743a03dbb2c95171cc58639fef29abc8816598e27fb910ed2e621e589a
     container_name: taskflow-nginx
     restart: unless-stopped
     volumes:
@@ -53,6 +71,9 @@ services:
     networks:
       - internal
       - proxy-net
+    mem_limit: 128m
+    cpus: 0.5
+    logging: *default-logging
 
 volumes:
   mongo_data:
